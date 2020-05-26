@@ -1,7 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <style name="DatePickerCustom" >
+
+    <style name="DatePickerCustom">
         <item name="android:datePickerMode">spinner</item>
+    </style>
+
+    <style name="Widget.Jellyfin.Row.Header" parent="Widget.Leanback.Row.Header">
+        <item name="android:textColor">?attr/headerTextColor</item>
     </style>
 
     <style name="spaced_buttons">
@@ -25,8 +30,23 @@
         <item name="android:windowEnterAnimation">@anim/abc_slide_in_top</item>
         <item name="android:windowExitAnimation">@anim/abc_slide_out_top</item>
     </style>
+
     <style name="PopupSlideInRight">
         <item name="android:windowEnterAnimation">@anim/slide_in_right</item>
         <item name="android:windowExitAnimation">@anim/slide_out_right</item>
+    </style>
+
+    <style name="Button.Default" parent="android:Widget.Button">
+        <item name="android:background">@drawable/button_default_back</item>
+        <item name="android:textColor">@drawable/button_default_text</item>
+        <item name="android:paddingTop">8dp</item>
+        <item name="android:paddingBottom">8dp</item>
+        <item name="android:paddingStart">16dp</item>
+        <item name="android:paddingEnd">16dp</item>
+        <item name="android:minHeight">0dp</item>
+    </style>
+
+    <style name="Widget.Jellyfin.BrowseHeaders" parent="Widget.Leanback.Headers.VerticalGridView">
+        <item name="android:background">@drawable/noise</item>
     </style>
 </resources>

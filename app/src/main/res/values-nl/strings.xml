@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources xmlns:tools="http://schemas.android.com/tools" tools:ignore="MissingTranslation">
     <string name="video_error_unknown_error">Laden video is mislukt</string>
-    <string name="txt_loading">Laden...</string>
-    <string name="title_activity_select_user">KiesGebruikerActiviteit</string>
+    <string name="txt_loading">Laden…</string>
+    <string name="title_activity_select_user">KiesGebruikersActiviteit</string>
     <string name="home_title">Hoofdpagina</string>
     <string name="btn_cancel">Annuleren</string>
     <string name="byletter_letters">ABCDEFGHIJKLMNOPQRSTUVWXYZ</string>
@@ -20,10 +20,9 @@
     <string name="dpad_entry_desc">Gebruik de D-Pad op uw afstandsbediening om een ​​numeriek wachtwoord in te voeren. Klik eenmaal op een knop voor het eerste weergegeven nummer of dubbelklik voor het tweede. Bijv. klik eenmaal \'boven\' voor 1 of dubbelklik op \'selecteren\' voor 5. Houd 1 seconde vast en laat de knop \'select\' los wanneer u klaar bent of druk op de linker knop om opnieuw te beginnen.</string>
     <string name="dpad_pw_cancel">* Houd de \'omlaag\'-knop ingedrukt gedurende 1 seconde en laat los als u een alpha wachtwoord hebt of behoefte aan een toetsenbord voor invoer</string>
     <string name="chapters">Hoofdstukken</string>
-    <string name="pref_auto_logoff_title">Automatisch afmelden na</string>
     <string name="pref_general">ALGEMEEN</string>
     <string name="lbl_settings">Instellingen</string>
-    <string name="lbl_logout">"Uitloggen "</string>
+    <string name="lbl_logout">Uitloggen</string>
     <string name="lbl_library">Bibliotheek</string>
     <string name="lbl_continue_watching">Kijken hervatten</string>
     <string name="lbl_latest_movies">Laatste Films</string>
@@ -48,7 +47,7 @@
     <string name="lbl_tv_series">TV Series</string>
     <string name="lbl_other">Andere</string>
     <string name="lbl_latest_additions">Laatste toevoegingen</string>
-    <string name="lbl_because_you_watched">"Omdat u keek naar {0}"</string>
+    <string name="lbl_because_you_watched">"Omdat je keek naar {0} "</string>
     <string name="lbl_play_all">Speel alles</string>
     <string name="lbl_shuffle_all">Alles willekeurig</string>
     <string name="lbl_play">Afspelen</string>
@@ -128,7 +127,7 @@
     <string name="lbl_dislike">Niet leuk</string>
     <string name="lbl_unlike">Verwijder leuk</string>
     <string name="lbl_remove_dislike">Verwijder niet leuk</string>
-    <string name="lbl_confirm_mark_unwatched">Dit markeert alles als niet gezien. Weet u dit heel zeker?</string>
+    <string name="lbl_confirm_mark_unwatched">Dit markeert alles als niet gezien. Weet u dit HEEL zeker\?</string>
     <string name="msg_no_playable_items">Geen afspeelbare items</string>
     <string name="lbl_unwatched">Ongezien</string>
     <string name="lbl_load_channels">"Laad kanalen "</string>
@@ -235,10 +234,10 @@
     <string name="lbl_series">Series</string>
     <string name="pref_authentication_cat">Authenticatie</string>
     <string name="loading">Laden…</string>
-    <string name="lbl_in_x_days">Over %s dagen</string>
+    <string name="lbl_in_x_days">Over %d dagen</string>
     <string name="lbl_bitstream_dts">DTS Audio bitstream</string>
     <string name="desc_premieres">Toon een rij van nieuwe afleveringspiloten voor een serie die je bekijkt</string>
-    <string name="lbl_show_premieres">Seizoenpremières op het startscherm weergeven</string>
+    <string name="lbl_show_premieres">Toon seizoens-premières tijdens het bladeren</string>
     <string name="lbl_refresh_switching">"Verversingsfrequentie  schakelen"</string>
     <string name="desc_use_vlc_livetv">Indien beschikbaar, VLC gebruiken voor rechtstreekse streaming van live TV</string>
     <string name="lbl_use_vlc_livetv">Probeer VLC te gebruiken voor Live TV</string>
@@ -295,7 +294,7 @@
     <string name="lbl_new_episodes">Nieuwe afleveringen</string>
     <string name="lbl_new_only">Alleen nieuwe resultaten</string>
     <string name="lbl_latest_tv_shows">Nieuwste TV Shows</string>
-    <string name="lbl_suggestions_holiday">Feestdagen suggesties</string>
+    <string name="lbl_suggestions_holiday">Feestdagen Suggesties</string>
     <string name="desc_suggestions_halloween">Probeer een van onze griezelige suggesties</string>
     <string name="title_suggestions_halloween">Fijne Halloween!</string>
     <string name="lbl_suggestions_halloween">Griezelige suggesties</string>
@@ -317,4 +316,48 @@
     <string name="lbl_episode_not_record">Deze weergave wordt niet opgenomen</string>
     <string name="lbl_schedule">Planning</string>
     <string name="no_program_data">Geen programma data beschikbaar</string>
+    <string name="title_activity_expanded_text">UitgeklapteTekstActiviteit</string>
+    <string name="lbl_image_type">Afbeelding Type</string>
+    <string name="lbl_default_view">Standaard Zicht</string>
+    <string name="lbl_start_favorites">Plaats Favorieten Vooraan</string>
+    <string name="lbl_colored_backgrounds">Kleur Gecodeerde Achtergronden</string>
+    <string name="lbl_hd_programs">HD Programma\'s</string>
+    <string name="lbl_live_broadcasts">Live Uitzendingen</string>
+    <string name="lbl_premieres">Premières</string>
+    <string name="desc_suggestions_holiday">Probeer enkele van onze festieve suggesties</string>
+    <string name="pref_use_direct_path_summary">Geef het bestandssysteem pad in plaats van de streaming URL</string>
+    <string name="pref_use_direct_path_title">Gebruik direct pad voor externe speler</string>
+    <string name="lbl_show_indicators">Toon Indicators Voor</string>
+    <string name="pref_video_player_external">Externe applicatie</string>
+    <string name="pref_video_player_vlc">libVLC</string>
+    <string name="pref_video_player_exoplayer">ExoPlayer</string>
+    <string name="pref_video_player_auto">Automatisch selecteren</string>
+    <string name="lbl_my_media">Mijn Media</string>
+    <string name="acra_dialog_title">Oeps! Er ging iets verkeerd.</string>
+    <string name="pref_acra_alwaysaccept_disabled">Een melding wordt getoond voordat crashrapportages verzonden worden</string>
+    <string name="pref_acra_alwaysaccept_enabled">Crash rapportages worden verzonden zonder het eerst te vragen</string>
+    <string name="pref_acra_alwaysaccept">Verzend rapportages zonder het eerst te vragen</string>
+    <string name="pref_acra_disabled">Crash rapportages worden niet verzonden</string>
+    <string name="pref_acra_enabled">Er wordt een verzendmelding getoond voor crashrapportages</string>
+    <string name="pref_enable_acra">Verzend crash rapporten naar ontwikkelaars</string>
+    <string name="pref_acra_category">Crash Rapportering</string>
+    <string name="pref_acra_syslog_disabled">Systeemlogboeken worden niet toegevoegd aan crash rapporten</string>
+    <string name="pref_acra_syslog_enabled">Systeemlogboeken worden toegevoegd aan crash rapporten</string>
+    <string name="pref_next_up_enabled_summary">Laat de volgende in de wachtrij zien voor het afspelen</string>
+    <string name="watch_now">Bekijk nu</string>
+    <string name="pref_next_up_timeout_summary">Hoelang wachten voordat het volgende item wordt afgespeeld</string>
+    <string name="pref_media_player">Geprefereerde media speler</string>
+    <string name="pref_about_title">Over</string>
+    <string name="pref_app_theme">App Thema</string>
+    <string name="pref_libvlc_audio_delay_title">Standaard geluidsvertraging voor libVLC</string>
+    <string name="pref_next_up_enabled_title">Volgend scherm inschakelen</string>
+    <string name="pref_next_up_timeout_title">Volgende Tijdsduur</string>
+    <string name="pref_theme_emerald">Klassiek smaragd</string>
+    <string name="pref_theme_dark">Donker (Standaard)</string>
+    <string name="acra_dialog_text">Wilt u een crashmelding sturen naar de ontwikkelaars\?
+\n
+\nDeze informatie wordt verzonden naar een derde partij (tracepot.com).
+\n
+\nDeze Prompt kan worden uitgeschakeld in het Crash Reporting deel in de Jellyfin app\'s Instellingen.</string>
+    <string name="pref_acra_syslog">Neem systeemlogs op in crashrapporten. Dit kan privégegevens van andere applicaties bevatten als deze werden gelogd op het moment van de crash.</string>
 </resources>

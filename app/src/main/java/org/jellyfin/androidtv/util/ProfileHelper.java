@@ -6,11 +6,6 @@ import org.jellyfin.androidtv.TvApp;
 import org.jellyfin.androidtv.constants.CodecTypes;
 import org.jellyfin.androidtv.constants.ContainerTypes;
 import org.jellyfin.androidtv.model.compat.AndroidProfileOptions;
-
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-
 import org.jellyfin.apiclient.model.dlna.CodecProfile;
 import org.jellyfin.apiclient.model.dlna.CodecType;
 import org.jellyfin.apiclient.model.dlna.ContainerProfile;
@@ -25,6 +20,12 @@ import org.jellyfin.apiclient.model.dlna.SubtitleDeliveryMethod;
 import org.jellyfin.apiclient.model.dlna.SubtitleProfile;
 import org.jellyfin.apiclient.model.dlna.TranscodingProfile;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+
+import timber.log.Timber;
+
 public class ProfileHelper {
     private static MediaCodecCapabilitiesTest MediaTest = new MediaCodecCapabilitiesTest();
 
@@ -33,7 +34,7 @@ public class ProfileHelper {
 
         profile.setName("Android");
         profile.setMaxStreamingBitrate(20000000);
-        profile.setMaxStaticBitrate(30000000);
+        profile.setMaxStaticBitrate(100000000);
 
         List<TranscodingProfile> transcodingProfiles = new ArrayList<>();
 
@@ -139,8 +140,8 @@ public class ProfileHelper {
         profile.setSubtitleProfiles(new SubtitleProfile[] {
             getSubtitleProfile("srt", SubtitleDeliveryMethod.Embed),
             getSubtitleProfile("subrip", SubtitleDeliveryMethod.Embed),
-            getSubtitleProfile("ass", SubtitleDeliveryMethod.Encode),
-            getSubtitleProfile("ssa", SubtitleDeliveryMethod.Encode),
+            getSubtitleProfile("ass", SubtitleDeliveryMethod.Embed),
+            getSubtitleProfile("ssa", SubtitleDeliveryMethod.Embed),
             getSubtitleProfile("pgs", SubtitleDeliveryMethod.Embed),
             getSubtitleProfile("pgssub", SubtitleDeliveryMethod.Embed),
             getSubtitleProfile("dvdsub", SubtitleDeliveryMethod.Embed),
@@ -270,7 +271,7 @@ public class ProfileHelper {
         profile.setName("Android-Exo");
 
         List<DirectPlayProfile> directPlayProfiles = new ArrayList<>();
-        if (!isLiveTv || TvApp.getApplication().directStreamLiveTv()) {
+        if (!isLiveTv || TvApp.getApplication().getUserPreferences().getLiveTvDirectPlayEnabled()) {
             DirectPlayProfile videoDirectPlayProfile = new DirectPlayProfile();
             List<String> containers = new ArrayList<>();
             if (isLiveTv) {
@@ -313,7 +314,7 @@ public class ProfileHelper {
             videoDirectPlayProfile.setVideoCodec(Utils.join(",", videoCodecs));
             if (Utils.downMixAudio()) {
                 //compatible audio mode - will need to transcode dts and ac3
-                TvApp.getApplication().getLogger().Info("*** Excluding DTS and AC3 audio from direct play due to compatible audio setting");
+                Timber.i("*** Excluding DTS and AC3 audio from direct play due to compatible audio setting");
                 videoDirectPlayProfile.setAudioCodec(Utils.join(",", CodecTypes.AAC, CodecTypes.MP3, CodecTypes.MP2));
             } else {
                 List<String> audioCodecs = new ArrayList<>(Arrays.asList(
@@ -417,14 +418,14 @@ public class ProfileHelper {
         hevcProfile.setCodec(CodecTypes.HEVC);
         if (!MediaTest.supportsHevc()) {
             //The following condition is a method to exclude all HEVC
-            TvApp.getApplication().getLogger().Info("*** Does NOT support HEVC");
+            Timber.i("*** Does NOT support HEVC");
             hevcProfile.setConditions(new ProfileCondition[]
                     {
                             new ProfileCondition(ProfileConditionType.Equals, ProfileConditionValue.VideoProfile, "none"),
                     });
 
         } else if (!MediaTest.supportsHevcMain10()) {
-            TvApp.getApplication().getLogger().Info("*** Does NOT support HEVC 10 bit");
+            Timber.i("*** Does NOT support HEVC 10 bit");
             hevcProfile.setConditions(new ProfileCondition[]
                     {
                             new ProfileCondition(ProfileConditionType.NotEquals, ProfileConditionValue.VideoProfile, "Main 10"),
@@ -432,7 +433,7 @@ public class ProfileHelper {
 
         } else {
             // supports all HEVC
-            TvApp.getApplication().getLogger().Info("*** Supports HEVC 10 bit");
+            Timber.i("*** Supports HEVC 10 bit");
             hevcProfile.setConditions(new ProfileCondition[]
                     {
                             new ProfileCondition(ProfileConditionType.NotEquals, ProfileConditionValue.VideoProfile, "none"),
@@ -447,7 +448,7 @@ public class ProfileHelper {
         TranscodingProfile mkvProfile = getTranscodingProfile(profile, ContainerTypes.MKV);
         if (mkvProfile != null && !Utils.downMixAudio())
         {
-            TvApp.getApplication().getLogger().Info("*** Adding AC3 as supported transcoded audio");
+            Timber.i("*** Adding AC3 as supported transcoded audio");
             mkvProfile.setAudioCodec(primary ? CodecTypes.AC3 + ",".concat(mkvProfile.getAudioCodec()) : mkvProfile.getAudioCodec().concat("," + CodecTypes.AC3));
         }
     }

@@ -4,16 +4,20 @@ import android.app.AlertDialog;
 import android.content.ActivityNotFoundException;
 import android.content.DialogInterface;
 import android.content.Intent;
-import android.content.SharedPreferences;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
+
+import androidx.fragment.app.FragmentActivity;
+import androidx.leanback.app.BackgroundManager;
 
 import org.jellyfin.androidtv.R;
 import org.jellyfin.androidtv.TvApp;
 import org.jellyfin.androidtv.model.compat.PlaybackException;
 import org.jellyfin.androidtv.model.compat.StreamInfo;
 import org.jellyfin.androidtv.model.compat.VideoOptions;
+import org.jellyfin.androidtv.preferences.UserPreferences;
+import org.jellyfin.androidtv.preferences.enums.PreferredVideoPlayer;
 import org.jellyfin.androidtv.util.ProfileHelper;
 import org.jellyfin.androidtv.util.Utils;
 import org.jellyfin.androidtv.util.apiclient.ReportingHelper;
@@ -25,8 +29,7 @@ import org.jellyfin.apiclient.model.session.PlayMethod;
 
 import java.util.List;
 
-import androidx.fragment.app.FragmentActivity;
-import androidx.leanback.app.BackgroundManager;
+import timber.log.Timber;
 
 public class ExternalPlayerActivity extends FragmentActivity {
 
@@ -65,11 +68,13 @@ public class ExternalPlayerActivity extends FragmentActivity {
 
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+
         long playerFinishedTime = System.currentTimeMillis();
-        mApplication.getLogger().Debug("Returned from player... "+ resultCode);
+        Timber.d("Returned from player... %d", resultCode);
         //MX Player will return position
         int pos = data != null ? data.getIntExtra("position", 0) : 0;
-        if (pos > 0) mApplication.getLogger().Info("Player returned position: "+pos);
+        if (pos > 0) Timber.i("Player returned position: %d", pos);
         Long reportPos = (long) pos * 10000;
 
         stopReportLoop();
@@ -78,7 +83,7 @@ public class ExternalPlayerActivity extends FragmentActivity {
         //Check against a total failure (no apps installed)
         if (playerFinishedTime - mLastPlayerStart < 1000) {
             // less than a second - probably no player explain the option
-            mApplication.getLogger().Info("Playback took less than a second - assuming it failed");
+            Timber.i("Playback took less than a second - assuming it failed");
             if (!noPlayerError) handlePlayerError();
             return;
         }
@@ -133,9 +138,9 @@ public class ExternalPlayerActivity extends FragmentActivity {
                 .setNegativeButton("Turn this option off", new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialog, int which) {
-                        SharedPreferences prefs = mApplication.getPrefs();
-                        prefs.edit().putString("pref_video_player", "auto").apply();
-                        prefs.edit().putBoolean("pref_live_tv_use_external", false).apply();
+                        UserPreferences prefs = mApplication.getUserPreferences();
+                        prefs.setVideoPlayer(PreferredVideoPlayer.AUTO);
+                        prefs.setLiveTvVideoPlayer(PreferredVideoPlayer.AUTO);
                     }
                 })
                 .setOnDismissListener(new DialogInterface.OnDismissListener() {
@@ -153,9 +158,7 @@ public class ExternalPlayerActivity extends FragmentActivity {
         mReportLoop = new Runnable() {
             @Override
             public void run() {
-                    ReportingHelper.reportProgress(mItemsToPlay.get(mCurrentNdx), mCurrentStreamInfo, mPosition, false);
-
-                mApplication.setLastUserInteraction(System.currentTimeMillis());
+                ReportingHelper.reportProgress(mItemsToPlay.get(mCurrentNdx), mCurrentStreamInfo, mPosition, false);
                 mHandler.postDelayed(this, 15000);
             }
         };
@@ -201,14 +204,14 @@ public class ExternalPlayerActivity extends FragmentActivity {
 
     protected void launchExternalPlayer(int ndx) {
         if (ndx >= mItemsToPlay.size()) {
-            mApplication.getLogger().Error("Attempt to play index beyond items: %s",ndx);
+            Timber.e("Attempt to play index beyond items: %s",ndx);
         } else {
             //Get playback info for current item
             mCurrentNdx = ndx;
             final BaseItemDto item = mItemsToPlay.get(mCurrentNdx);
             isLiveTv = item.getBaseItemType() == BaseItemType.TvChannel;
 
-            if (!isLiveTv && mApplication.getPrefs().getBoolean("pref_send_path_external", false)) {
+            if (!isLiveTv && mApplication.getUserPreferences().getExternalVideoPlayerSendPath()) {
                 // Just pass the path directly
                 mCurrentStreamInfo = new StreamInfo();
                 mCurrentStreamInfo.setPlayMethod(PlayMethod.DirectPlay);
@@ -238,7 +241,7 @@ public class ExternalPlayerActivity extends FragmentActivity {
 
                     @Override
                     public void onError(Exception exception) {
-                        mApplication.getLogger().ErrorException("Error getting playback stream info", exception);
+                        Timber.e(exception, "Error getting playback stream info");
                         if (exception instanceof PlaybackException) {
                             PlaybackException ex = (PlaybackException) exception;
                             switch (ex.getErrorCode()) {
@@ -286,7 +289,7 @@ public class ExternalPlayerActivity extends FragmentActivity {
         }
         //End MX Player
 
-        mApplication.getLogger().Info("Starting external playback of path: %s and mime: video/%s",path,container);
+        Timber.i("Starting external playback of path: %s and mime: video/%s",path,container);
 
         try {
             mLastPlayerStart = System.currentTimeMillis();
@@ -296,7 +299,7 @@ public class ExternalPlayerActivity extends FragmentActivity {
 
         } catch (ActivityNotFoundException e) {
             noPlayerError = true;
-            mApplication.getLogger().ErrorException("Error launching external player", e);
+            Timber.e(e, "Error launching external player");
             handlePlayerError();
         }
 

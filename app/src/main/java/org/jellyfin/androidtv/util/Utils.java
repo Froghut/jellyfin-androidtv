@@ -5,14 +5,12 @@ import android.app.AlertDialog;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
-import android.content.SharedPreferences;
 import android.content.res.TypedArray;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Color;
 import android.media.AudioManager;
 import android.media.ToneGenerator;
-import android.preference.PreferenceManager;
 import android.text.InputType;
 import android.view.View;
 import android.widget.EditText;
@@ -22,8 +20,11 @@ import android.widget.Toast;
 import org.jellyfin.androidtv.BuildConfig;
 import org.jellyfin.androidtv.R;
 import org.jellyfin.androidtv.TvApp;
+import org.jellyfin.androidtv.model.repository.SerializerRepository;
+import org.jellyfin.androidtv.preferences.enums.AudioBehavior;
 import org.jellyfin.androidtv.startup.DpadPwActivity;
 import org.jellyfin.androidtv.util.apiclient.AuthenticationHelper;
+import org.jellyfin.apiclient.model.dto.UserDto;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -34,11 +35,10 @@ import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.Arrays;
-import java.util.Collection;
 import java.util.Iterator;
 import java.util.UUID;
 
-import org.jellyfin.apiclient.model.dto.UserDto;
+import timber.log.Timber;
 
 /**
  * A collection of utility methods, all static.
@@ -196,18 +196,13 @@ public class Utils {
     }
 
     public static int getMaxBitrate() {
-        SharedPreferences sharedPref = PreferenceManager.getDefaultSharedPreferences(TvApp.getApplication());
-        String maxRate = sharedPref.getString("pref_max_bitrate", "0");
-        Float factor = Float.parseFloat(maxRate) * 10;
-        return Math.min(factor == 0 ? TvApp.getApplication().getAutoBitrate() : (factor.intValue() * 100000), TvApp.getApplication().getServerBitrateLimit());
+        String maxRate = TvApp.getApplication().getUserPreferences().getMaxBitrate();
+        float factor = Float.parseFloat(maxRate) * 10;
+        return Math.min(factor == 0 ? TvApp.getApplication().getAutoBitrate() : ((int) factor * 100000), 100000000);
     }
 
-    public static PopupMenu createPopupMenu(Activity activity, View view, int gravity) {
-        return new PopupMenu(activity, view, gravity);
-    }
-
-    public static int getThemeColor(int resourceId) {
-        return getThemeColor(TvApp.getApplication().getCurrentActivity(), resourceId);
+    public static PopupMenu createPopupMenu(Context context, View view, int gravity) {
+        return new PopupMenu(context, view, gravity);
     }
 
     public static int getThemeColor(Context context, int resourceId) {
@@ -219,27 +214,19 @@ public class Utils {
         return themeColor;
     }
 
-    public static int getBrandColor() {
-        return getThemeColor(android.R.attr.colorPrimary);
-    }
-
-    public static int getBrandColor(Context context) {
-        return getThemeColor(context, android.R.attr.colorPrimary);
-    }
-
     public static void processPasswordEntry(Activity activity, UserDto user) {
         processPasswordEntry(activity, user, null);
     }
 
     public static void processPasswordEntry(final Activity activity, final UserDto user, final String directItemId) {
-        if (TvApp.getApplication().getPrefs().getBoolean("pref_alt_pw_entry", false)) {
+        if (TvApp.getApplication().getUserPreferences().getPasswordDPadEnabled()) {
             Intent pwIntent = new Intent(activity, DpadPwActivity.class);
-            pwIntent.putExtra("User", TvApp.getApplication().getSerializer().SerializeToString(user));
+            pwIntent.putExtra("User", SerializerRepository.INSTANCE.getSerializer().SerializeToString(user));
             pwIntent.putExtra("ItemId", directItemId);
             pwIntent.addFlags(Intent.FLAG_ACTIVITY_NO_HISTORY);
             activity.startActivity(pwIntent);
         } else {
-            TvApp.getApplication().getLogger().Debug("Requesting dialog...");
+            Timber.d("Requesting dialog...");
             final EditText password = new EditText(activity);
             password.setInputType(InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_VARIATION_PASSWORD);
             new AlertDialog.Builder(activity)
@@ -279,12 +266,11 @@ public class Utils {
     public static boolean downMixAudio() {
         AudioManager am = (AudioManager) TvApp.getApplication().getSystemService(Context.AUDIO_SERVICE);
         if (am.isBluetoothA2dpOn()) {
-            TvApp.getApplication().getLogger().Info("Downmixing audio due to wired headset");
+            Timber.i("Downmixing audio due to wired headset");
             return true;
         }
 
-        return (DeviceUtils.isFireTv() && !DeviceUtils.is50()) ||
-                "1".equals(TvApp.getApplication().getPrefs().getString("pref_audio_option", "0"));
+        return (DeviceUtils.isFireTv() && !DeviceUtils.is50()) || TvApp.getApplication().getUserPreferences().getAudioBehaviour() == AudioBehavior.DOWNMIX_TO_STEREO;
     }
 
     /**

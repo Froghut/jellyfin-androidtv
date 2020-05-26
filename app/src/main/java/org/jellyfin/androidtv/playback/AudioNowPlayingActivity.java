@@ -4,20 +4,8 @@ import android.animation.ObjectAnimator;
 import android.app.AlertDialog;
 import android.content.DialogInterface;
 import android.content.Intent;
-import android.graphics.Typeface;
-import android.graphics.drawable.Drawable;
 import android.os.Bundle;
 import android.os.Handler;
-import androidx.leanback.app.BackgroundManager;
-import androidx.leanback.app.RowsSupportFragment;
-import androidx.leanback.widget.ArrayObjectAdapter;
-import androidx.leanback.widget.HeaderItem;
-import androidx.leanback.widget.ListRow;
-import androidx.leanback.widget.OnItemViewClickedListener;
-import androidx.leanback.widget.OnItemViewSelectedListener;
-import androidx.leanback.widget.Presenter;
-import androidx.leanback.widget.Row;
-import androidx.leanback.widget.RowPresenter;
 import android.util.DisplayMetrics;
 import android.view.KeyEvent;
 import android.view.View;
@@ -48,8 +36,19 @@ import org.jellyfin.androidtv.util.InfoLayoutHelper;
 import org.jellyfin.androidtv.util.KeyProcessor;
 import org.jellyfin.androidtv.util.TimeUtils;
 import org.jellyfin.androidtv.util.Utils;
-
 import org.jellyfin.apiclient.model.dto.BaseItemDto;
+
+import androidx.leanback.app.BackgroundManager;
+import androidx.leanback.app.RowsSupportFragment;
+import androidx.leanback.widget.ArrayObjectAdapter;
+import androidx.leanback.widget.HeaderItem;
+import androidx.leanback.widget.ListRow;
+import androidx.leanback.widget.OnItemViewClickedListener;
+import androidx.leanback.widget.OnItemViewSelectedListener;
+import androidx.leanback.widget.Presenter;
+import androidx.leanback.widget.Row;
+import androidx.leanback.widget.RowPresenter;
+import timber.log.Timber;
 
 public class AudioNowPlayingActivity extends BaseActivity  {
 
@@ -97,11 +96,9 @@ public class AudioNowPlayingActivity extends BaseActivity  {
     private Handler mLoopHandler = new Handler();
     private Runnable mBackdropLoop;
     public static int BACKDROP_ROTATION_INTERVAL = 10000;
-    private Typeface roboto;
 
     private BaseItemDto mBaseItem;
     private ListRow mQueueRow;
-    private Drawable mListBackground;
 
     private long lastUserInteraction;
     private boolean ssActive;
@@ -116,33 +113,23 @@ public class AudioNowPlayingActivity extends BaseActivity  {
         BUTTON_SIZE = Utils.convertDpToPixel(this, 35);
         mApplication = TvApp.getApplication();
         mActivity = this;
-        roboto = mApplication.getDefaultFont();
 
         mClock = findViewById(R.id.clock);
         mPoster = findViewById(R.id.poster);
         mArtistName = findViewById(R.id.artistTitle);
-        mArtistName.setTypeface(roboto);
         mGenreRow = findViewById(R.id.genreRow);
         mSongTitle = findViewById(R.id.song);
-        mSongTitle.setTypeface(roboto);
         mAlbumTitle = findViewById(R.id.album);
-        mAlbumTitle.setTypeface(roboto);
         mCurrentNdx = findViewById(R.id.track);
-        mCurrentNdx.setTypeface(roboto);
         mScrollView = findViewById(R.id.mainScroller);
         mCounter = findViewById(R.id.counter);
-        mCounter.setTypeface(roboto);
         mLogoImage = findViewById(R.id.artistLogo);
 
         mSSArea = findViewById(R.id.ssInfoArea);
         mSSTime = findViewById(R.id.ssTime);
-        mSSTime.setTypeface(roboto);
         mSSAlbumSong = findViewById(R.id.ssAlbumSong);
-        mSSAlbumSong.setTypeface(roboto);
         mSSQueueStatus = findViewById(R.id.ssQueueStatus);
-        mSSQueueStatus.setTypeface(roboto);
         mSSUpNext = findViewById(R.id.ssUpNext);
-        mSSUpNext.setTypeface(roboto);
 
         mPlayPauseButton = findViewById(R.id.playPauseBtn);
         mPlayPauseButton.setSecondaryImage(R.drawable.ic_pause);
@@ -259,12 +246,9 @@ public class AudioNowPlayingActivity extends BaseActivity  {
         mRowsFragment = new RowsSupportFragment();
         getSupportFragmentManager().beginTransaction().add(R.id.rowsFragment, mRowsFragment).commit();
 
-        //create list background gradient
-        mListBackground = mApplication.getCurrentBackgroundGradient();
-
         mRowsFragment.setOnItemViewClickedListener(new ItemViewClickedListener());
         mRowsFragment.setOnItemViewSelectedListener(new ItemViewSelectedListener());
-        mAudioQueuePresenter = new PositionableListRowPresenter(mListBackground, 10);
+        mAudioQueuePresenter = new PositionableListRowPresenter(getDrawable(R.color.black_transparent_light), 10);
         mRowsAdapter = new ArrayObjectAdapter(mAudioQueuePresenter);
         mRowsFragment.setAdapter(mRowsAdapter);
         addQueue();
@@ -352,7 +336,7 @@ public class AudioNowPlayingActivity extends BaseActivity  {
     private AudioEventListener audioEventListener = new AudioEventListener() {
         @Override
         public void onPlaybackStateChange(PlaybackController.PlaybackState newState, BaseItemDto currentItem) {
-            mApplication.getLogger().Debug("**** Got playstate change: " + newState);
+            Timber.d("**** Got playstate change: %s", newState.toString());
             if (newState == PlaybackController.PlaybackState.PLAYING && currentItem != mBaseItem) {
                 // new item started
                 loadItem();
@@ -406,7 +390,7 @@ public class AudioNowPlayingActivity extends BaseActivity  {
         if (posterHeight < 10) posterWidth = Utils.convertDpToPixel(mActivity, 150);  //Guard against zero size images causing picasso to barf
 
         String primaryImageUrl = ImageUtils.getPrimaryImageUrl(mBaseItem, mApplication.getApiClient(), false, posterHeight);
-        mApplication.getLogger().Debug("Audio Poster url: " + primaryImageUrl);
+        Timber.d("Audio Poster url: %s", primaryImageUrl);
         Picasso.with(mActivity)
                 .load(primaryImageUrl)
                 .skipMemoryCache()
@@ -460,10 +444,8 @@ public class AudioNowPlayingActivity extends BaseActivity  {
         if (item != null) {
             mArtistName.setText(getArtistName(item));
             mSongTitle.setText(item.getName());
-            mAlbumTitle.setText(String.format(getResources().getString(R.string.lbl_now_playing_album), item.getAlbum()));
-            mCurrentNdx.setText(String.format(getResources().getString(R.string.lbl_now_playing_track),
-                    MediaManager.getCurrentAudioQueueDisplayPosition(),
-                    MediaManager.getCurrentAudioQueueDisplaySize()));
+            mAlbumTitle.setText(getResources().getString(R.string.lbl_now_playing_album, item.getAlbum()));
+            mCurrentNdx.setText(getResources().getString(R.string.lbl_now_playing_track, MediaManager.getCurrentAudioQueueDisplayPosition(), MediaManager.getCurrentAudioQueueDisplaySize()));
             mCurrentDuration = ((Long)((item.getRunTimeTicks() != null ? item.getRunTimeTicks() : 0) / 10000)).intValue();
             //set progress to match duration
             mCurrentProgress.setMax(mCurrentDuration);
@@ -489,7 +471,7 @@ public class AudioNowPlayingActivity extends BaseActivity  {
             for (String genre : mBaseItem.getGenres()) {
                 if (!first) InfoLayoutHelper.addSpacer(this, layout, "  /  ", 14);
                 first = false;
-                layout.addView(new GenreButton(this, roboto, 16, genre, mBaseItem.getBaseItemType()));
+                layout.addView(new GenreButton(this, 16, genre, mBaseItem.getBaseItemType()));
             }
         }
     }

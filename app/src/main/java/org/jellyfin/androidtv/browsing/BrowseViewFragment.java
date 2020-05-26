@@ -1,9 +1,5 @@
 package org.jellyfin.androidtv.browsing;
 
-import androidx.leanback.widget.ArrayObjectAdapter;
-import androidx.leanback.widget.HeaderItem;
-import androidx.leanback.widget.ListRow;
-
 import org.jellyfin.androidtv.R;
 import org.jellyfin.androidtv.TvApp;
 import org.jellyfin.androidtv.itemhandling.ItemRowAdapter;
@@ -14,10 +10,6 @@ import org.jellyfin.androidtv.querying.StdItemQuery;
 import org.jellyfin.androidtv.ui.GridButton;
 import org.jellyfin.androidtv.util.TimeUtils;
 import org.jellyfin.androidtv.util.Utils;
-
-import java.util.ArrayList;
-import java.util.List;
-
 import org.jellyfin.apiclient.interaction.Response;
 import org.jellyfin.apiclient.model.dto.BaseItemDto;
 import org.jellyfin.apiclient.model.dto.BaseItemType;
@@ -38,6 +30,15 @@ import org.jellyfin.apiclient.model.querying.ItemsResult;
 import org.jellyfin.apiclient.model.querying.LatestItemsQuery;
 import org.jellyfin.apiclient.model.querying.NextUpQuery;
 import org.jellyfin.apiclient.model.results.TimerInfoDtoResult;
+
+import java.util.ArrayList;
+import java.util.List;
+
+import androidx.leanback.widget.ArrayObjectAdapter;
+import androidx.leanback.widget.HeaderItem;
+import androidx.leanback.widget.ListRow;
+
+import timber.log.Timber;
 
 public class BrowseViewFragment extends EnhancedBrowseFragment {
     private boolean isLiveTvLibrary;
@@ -65,7 +66,11 @@ public class BrowseViewFragment extends EnhancedBrowseFragment {
 
                 //Latest
                 LatestItemsQuery latestMovies = new LatestItemsQuery();
-                latestMovies.setFields(new ItemFields[]{ItemFields.PrimaryImageAspectRatio, ItemFields.Overview});
+                latestMovies.setFields(new ItemFields[]{
+                        ItemFields.PrimaryImageAspectRatio,
+                        ItemFields.Overview,
+                        ItemFields.ChildCount
+                });
                 latestMovies.setParentId(mFolder.getId());
                 latestMovies.setLimit(50);
                 latestMovies.setImageTypeLimit(1);
@@ -83,6 +88,9 @@ public class BrowseViewFragment extends EnhancedBrowseFragment {
 
                 //Collections
                 StdItemQuery collections = new StdItemQuery();
+                collections.setFields(new ItemFields[]{
+                        ItemFields.ChildCount
+                });
                 collections.setIncludeItemTypes(new String[]{"BoxSet"});
                 collections.setRecursive(true);
                 collections.setImageTypeLimit(1);
@@ -101,12 +109,21 @@ public class BrowseViewFragment extends EnhancedBrowseFragment {
                 nextUpQuery.setLimit(50);
                 nextUpQuery.setParentId(mFolder.getId());
                 nextUpQuery.setImageTypeLimit(1);
-                nextUpQuery.setFields(new ItemFields[]{ItemFields.PrimaryImageAspectRatio, ItemFields.Overview});
+                nextUpQuery.setFields(new ItemFields[]{
+                        ItemFields.PrimaryImageAspectRatio,
+                        ItemFields.Overview,
+                        ItemFields.ChildCount
+                });
                 mRows.add(new BrowseRowDef(mApplication.getResources().getString(R.string.lbl_next_up), nextUpQuery, new ChangeTriggerType[]{ChangeTriggerType.TvPlayback}));
 
                 //Premieres
-                if (mApplication.getPrefs().getBoolean("pref_enable_premieres", false)) {
-                    StdItemQuery newQuery = new StdItemQuery(new ItemFields[]{ItemFields.DateCreated, ItemFields.PrimaryImageAspectRatio, ItemFields.Overview});
+                if (mApplication.getUserPreferences().getPremieresEnabled()) {
+                    StdItemQuery newQuery = new StdItemQuery(new ItemFields[]{
+                            ItemFields.DateCreated,
+                            ItemFields.PrimaryImageAspectRatio,
+                            ItemFields.Overview,
+                            ItemFields.ChildCount
+                    });
                     newQuery.setUserId(TvApp.getApplication().getCurrentUser().getId());
                     newQuery.setIncludeItemTypes(new String[]{"Episode"});
                     newQuery.setParentId(mFolder.getId());
@@ -124,7 +141,11 @@ public class BrowseViewFragment extends EnhancedBrowseFragment {
 
                 //Latest content added
                 LatestItemsQuery latestSeries = new LatestItemsQuery();
-                latestSeries.setFields(new ItemFields[]{ItemFields.PrimaryImageAspectRatio, ItemFields.Overview});
+                latestSeries.setFields(new ItemFields[]{
+                        ItemFields.PrimaryImageAspectRatio,
+                        ItemFields.Overview,
+                        ItemFields.ChildCount
+                });
                 latestSeries.setIncludeItemTypes(new String[]{"Episode"});
                 latestSeries.setGroupItems(true);
                 latestSeries.setParentId(mFolder.getId());
@@ -148,7 +169,11 @@ public class BrowseViewFragment extends EnhancedBrowseFragment {
 
                 //Latest
                 LatestItemsQuery latestAlbums = new LatestItemsQuery();
-                latestAlbums.setFields(new ItemFields[]{ItemFields.PrimaryImageAspectRatio, ItemFields.Overview});
+                latestAlbums.setFields(new ItemFields[]{
+                        ItemFields.PrimaryImageAspectRatio,
+                        ItemFields.Overview,
+                        ItemFields.ChildCount
+                });
                 latestAlbums.setIncludeItemTypes(new String[]{"Audio"});
                 latestAlbums.setGroupItems(true);
                 latestAlbums.setImageTypeLimit(1);
@@ -180,7 +205,11 @@ public class BrowseViewFragment extends EnhancedBrowseFragment {
                 mRows.add(new BrowseRowDef(mApplication.getString(R.string.lbl_favorites), favAlbums, 60, false, true, new ChangeTriggerType[]{ChangeTriggerType.LibraryUpdated, ChangeTriggerType.FavoriteUpdate}));
 
                 //AudioPlaylists
-                StdItemQuery playlists = new StdItemQuery(new ItemFields[]{ItemFields.PrimaryImageAspectRatio, ItemFields.CumulativeRunTimeTicks});
+                StdItemQuery playlists = new StdItemQuery(new ItemFields[]{
+                        ItemFields.PrimaryImageAspectRatio,
+                        ItemFields.CumulativeRunTimeTicks,
+                        ItemFields.ChildCount
+                });
                 playlists.setIncludeItemTypes(new String[]{"Playlist"});
                 playlists.setImageTypeLimit(1);
                 playlists.setRecursive(true);
@@ -197,7 +226,12 @@ public class BrowseViewFragment extends EnhancedBrowseFragment {
                 //On now
                 RecommendedProgramQuery onNow = new RecommendedProgramQuery();
                 onNow.setIsAiring(true);
-                onNow.setFields(new ItemFields[]{ItemFields.Overview, ItemFields.PrimaryImageAspectRatio, ItemFields.ChannelInfo});
+                onNow.setFields(new ItemFields[]{
+                        ItemFields.Overview,
+                        ItemFields.PrimaryImageAspectRatio,
+                        ItemFields.ChannelInfo,
+                        ItemFields.ChildCount
+                });
                 onNow.setUserId(TvApp.getApplication().getCurrentUser().getId());
                 onNow.setImageTypeLimit(1);
                 onNow.setEnableTotalRecordCount(false);
@@ -207,7 +241,12 @@ public class BrowseViewFragment extends EnhancedBrowseFragment {
                 //Upcoming
                 RecommendedProgramQuery upcomingTv = new RecommendedProgramQuery();
                 upcomingTv.setUserId(TvApp.getApplication().getCurrentUser().getId());
-                upcomingTv.setFields(new ItemFields[]{ItemFields.Overview, ItemFields.PrimaryImageAspectRatio, ItemFields.ChannelInfo});
+                upcomingTv.setFields(new ItemFields[]{
+                        ItemFields.Overview,
+                        ItemFields.PrimaryImageAspectRatio,
+                        ItemFields.ChannelInfo,
+                        ItemFields.ChildCount
+                });
                 upcomingTv.setIsAiring(false);
                 upcomingTv.setHasAired(false);
                 upcomingTv.setImageTypeLimit(1);
@@ -230,7 +269,11 @@ public class BrowseViewFragment extends EnhancedBrowseFragment {
 
                 //Latest Recordings
                 RecordingQuery recordings = new RecordingQuery();
-                recordings.setFields(new ItemFields[]{ItemFields.Overview, ItemFields.PrimaryImageAspectRatio});
+                recordings.setFields(new ItemFields[]{
+                        ItemFields.Overview,
+                        ItemFields.PrimaryImageAspectRatio,
+                        ItemFields.ChildCount
+                });
                 recordings.setUserId(TvApp.getApplication().getCurrentUser().getId());
                 recordings.setEnableImages(true);
                 recordings.setLimit(40);
@@ -258,7 +301,7 @@ public class BrowseViewFragment extends EnhancedBrowseFragment {
                                             programInfo.setId(timer.getId());
                                             programInfo.setChannelName(timer.getChannelName());
                                             programInfo.setName(Utils.getSafeValue(timer.getName(), "Unknown"));
-                                            TvApp.getApplication().getLogger().Warn("No program info for timer %s.  Creating one...", programInfo.getName());
+                                            Timber.w("No program info for timer %s.  Creating one...", programInfo.getName());
                                             programInfo.setBaseItemType(BaseItemType.Program);
                                             programInfo.setTimerId(timer.getId());
                                             programInfo.setSeriesTimerId(timer.getSeriesTimerId());
@@ -289,7 +332,11 @@ public class BrowseViewFragment extends EnhancedBrowseFragment {
                                     //First put all recordings in and retrieve
                                     //All Recordings
                                     RecordingQuery recordings = new RecordingQuery();
-                                    recordings.setFields(new ItemFields[]{ItemFields.Overview, ItemFields.PrimaryImageAspectRatio});
+                                    recordings.setFields(new ItemFields[]{
+                                            ItemFields.Overview,
+                                            ItemFields.PrimaryImageAspectRatio,
+                                            ItemFields.ChildCount
+                                    });
                                     recordings.setUserId(TvApp.getApplication().getCurrentUser().getId());
                                     recordings.setEnableImages(true);
                                     mRows.add(new BrowseRowDef(mActivity.getString(R.string.lbl_recent_recordings), recordings, 50));

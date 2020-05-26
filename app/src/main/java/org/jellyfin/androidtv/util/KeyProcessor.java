@@ -16,15 +16,14 @@ import org.jellyfin.androidtv.details.ItemListActivity;
 import org.jellyfin.androidtv.details.PhotoPlayerActivity;
 import org.jellyfin.androidtv.itemhandling.AudioQueueItem;
 import org.jellyfin.androidtv.itemhandling.BaseRowItem;
+import org.jellyfin.androidtv.model.repository.ConnectionManagerRepository;
 import org.jellyfin.androidtv.playback.AudioNowPlayingActivity;
 import org.jellyfin.androidtv.playback.MediaManager;
 import org.jellyfin.androidtv.querying.StdItemQuery;
 import org.jellyfin.androidtv.util.apiclient.BaseItemUtils;
 import org.jellyfin.androidtv.util.apiclient.PlaybackHelper;
-
-import java.util.List;
-
 import org.jellyfin.apiclient.interaction.EmptyResponse;
+import org.jellyfin.apiclient.interaction.IConnectionManager;
 import org.jellyfin.apiclient.interaction.Response;
 import org.jellyfin.apiclient.model.dto.BaseItemDto;
 import org.jellyfin.apiclient.model.dto.BaseItemType;
@@ -32,6 +31,10 @@ import org.jellyfin.apiclient.model.dto.UserItemDataDto;
 import org.jellyfin.apiclient.model.entities.SortOrder;
 import org.jellyfin.apiclient.model.querying.ItemFilter;
 import org.jellyfin.apiclient.model.querying.ItemsResult;
+
+import java.util.List;
+
+import timber.log.Timber;
 
 public class KeyProcessor {
 
@@ -174,7 +177,7 @@ public class KeyProcessor {
                 break;
             case KeyEvent.KEYCODE_MENU:
             case KeyEvent.KEYCODE_BUTTON_Y:
-                TvApp.getApplication().getLogger().Debug("Menu for: "+rowItem.getFullName());
+                Timber.d("Menu for: %s", rowItem.getFullName());
 
                 //Create a contextual menu based on item
                 switch (rowItem.getItemType()) {
@@ -232,18 +235,17 @@ public class KeyProcessor {
         menu.setOnMenuItemClickListener(new PopupMenu.OnMenuItemClickListener() {
             @Override
             public boolean onMenuItemClick(MenuItem item) {
-                switch (item.getItemId()) {
-                    case MENU_FORGET:
-                        TvApp.getApplication().getConnectionManager().DeleteServer(rowItem.getItemId(), new EmptyResponse() {
-                            @Override
-                            public void onResponse() {
-                                activity.sendMessage(CustomMessage.RemoveCurrentItem);
-                            }
-                        });
-                        return true;
-                    default:
-                        return false;
+                if (item.getItemId() == MENU_FORGET) {
+                    final IConnectionManager connectionManager = ConnectionManagerRepository.Companion.getInstance(activity).getConnectionManager();
+                    connectionManager.DeleteServer(rowItem.getItemId(), new EmptyResponse() {
+                        @Override
+                        public void onResponse() {
+                            activity.sendMessage(CustomMessage.RemoveCurrentItem);
+                        }
+                    });
+                    return true;
                 }
+                return false;
             }
         });
 
@@ -429,7 +431,7 @@ public class KeyProcessor {
 
                         @Override
                         public void onError(Exception exception) {
-                            TvApp.getApplication().getLogger().ErrorException("Error trying to play first unwatched", exception);
+                            Timber.e(exception, "Error trying to play first unwatched");
                             Utils.showToast(mCurrentActivity, R.string.msg_video_playback_error);
                         }
                     });
@@ -522,7 +524,7 @@ public class KeyProcessor {
 
             @Override
             public void onError(Exception exception) {
-                TvApp.getApplication().getLogger().ErrorException("Error setting played status", exception);
+                Timber.e(exception, "Error setting played status");
                 Utils.showToast(mCurrentActivity, "Error setting played status");
             }
         });
@@ -538,7 +540,7 @@ public class KeyProcessor {
 
             @Override
             public void onError(Exception exception) {
-                TvApp.getApplication().getLogger().ErrorException("Error setting played status", exception);
+                Timber.e(exception, "Error setting played status");
                 Utils.showToast(mCurrentActivity, "Error setting played status");
             }
         });
@@ -550,12 +552,12 @@ public class KeyProcessor {
             @Override
             public void onResponse(UserItemDataDto response) {
                 mCurrentActivity.sendMessage(CustomMessage.RefreshCurrentItem);
-                TvApp.getApplication().setLastFavoriteUpdate(System.currentTimeMillis());
+                TvApp.getApplication().dataRefreshService.setLastFavoriteUpdate(System.currentTimeMillis());
             }
 
             @Override
             public void onError(Exception exception) {
-                TvApp.getApplication().getLogger().ErrorException("Error setting favorite status", exception);
+                Timber.e(exception, "Error setting favorite status");
                 Utils.showToast(mCurrentActivity, "Error setting favorite status");
             }
         });
@@ -572,7 +574,7 @@ public class KeyProcessor {
 
                 @Override
                 public void onError(Exception exception) {
-                    TvApp.getApplication().getLogger().ErrorException("Error clearing like status", exception);
+                    Timber.e(exception, "Error clearing like status");
                     Utils.showToast(mCurrentActivity, "Error clearing like status");
                 }
             });
@@ -586,7 +588,7 @@ public class KeyProcessor {
 
                 @Override
                 public void onError(Exception exception) {
-                    TvApp.getApplication().getLogger().ErrorException("Error setting like status", exception);
+                    Timber.e(exception, "Error setting like status");
                     Utils.showToast(mCurrentActivity, "Error setting like status");
                 }
             });

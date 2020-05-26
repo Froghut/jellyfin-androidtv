@@ -1,22 +1,14 @@
 package org.jellyfin.androidtv.browsing;
 
 import android.os.Handler;
-import androidx.leanback.widget.ArrayObjectAdapter;
-import androidx.leanback.widget.HeaderItem;
-import androidx.leanback.widget.ListRow;
 
 import org.jellyfin.androidtv.R;
 import org.jellyfin.androidtv.TvApp;
 import org.jellyfin.androidtv.itemhandling.ItemRowAdapter;
-import org.jellyfin.androidtv.model.DisplayPriorityType;
 import org.jellyfin.androidtv.presentation.GridButtonPresenter;
 import org.jellyfin.androidtv.ui.GridButton;
 import org.jellyfin.androidtv.util.TimeUtils;
 import org.jellyfin.androidtv.util.Utils;
-
-import java.util.ArrayList;
-import java.util.List;
-
 import org.jellyfin.apiclient.interaction.Response;
 import org.jellyfin.apiclient.model.dto.BaseItemDto;
 import org.jellyfin.apiclient.model.dto.BaseItemType;
@@ -28,25 +20,31 @@ import org.jellyfin.apiclient.model.livetv.TimerQuery;
 import org.jellyfin.apiclient.model.querying.ItemFields;
 import org.jellyfin.apiclient.model.results.TimerInfoDtoResult;
 
-/**
- * Created by Eric on 9/3/2015.
- */
-public class BrowseRecordingsFragment extends EnhancedBrowseFragment {
+import java.util.ArrayList;
+import java.util.List;
 
+import androidx.leanback.widget.ArrayObjectAdapter;
+import androidx.leanback.widget.HeaderItem;
+import androidx.leanback.widget.ListRow;
+import timber.log.Timber;
+
+public class BrowseRecordingsFragment extends EnhancedBrowseFragment {
     @Override
     public void onResume() {
         super.onResume();
-
     }
 
     @Override
     protected void setupQueries(final IRowLoader rowLoader) {
-
         showViews = true;
         mTitle.setText(TvApp.getApplication().getResources().getString(R.string.lbl_loading_elipses));
         //Latest Recordings
         RecordingQuery recordings = new RecordingQuery();
-        recordings.setFields(new ItemFields[]{ItemFields.Overview, ItemFields.PrimaryImageAspectRatio});
+        recordings.setFields(new ItemFields[]{
+                ItemFields.Overview,
+                ItemFields.PrimaryImageAspectRatio,
+                ItemFields.ChildCount
+        });
         recordings.setUserId(TvApp.getApplication().getCurrentUser().getId());
         recordings.setEnableImages(true);
         recordings.setLimit(40);
@@ -54,7 +52,11 @@ public class BrowseRecordingsFragment extends EnhancedBrowseFragment {
 
         //Movies
         RecordingQuery movies = new RecordingQuery();
-        movies.setFields(new ItemFields[]{ItemFields.Overview, ItemFields.PrimaryImageAspectRatio});
+        movies.setFields(new ItemFields[]{
+                ItemFields.Overview,
+                ItemFields.PrimaryImageAspectRatio,
+                ItemFields.ChildCount
+        });
         movies.setUserId(TvApp.getApplication().getCurrentUser().getId());
         movies.setEnableImages(true);
         movies.setIsMovie(true);
@@ -62,24 +64,26 @@ public class BrowseRecordingsFragment extends EnhancedBrowseFragment {
 
         //Shows
         RecordingQuery shows = new RecordingQuery();
-        shows.setFields(new ItemFields[]{ItemFields.Overview, ItemFields.PrimaryImageAspectRatio});
+        shows.setFields(new ItemFields[]{
+                ItemFields.Overview,
+                ItemFields.PrimaryImageAspectRatio,
+                ItemFields.ChildCount
+        });
         shows.setUserId(TvApp.getApplication().getCurrentUser().getId());
         shows.setEnableImages(true);
         shows.setIsSeries(true);
         BrowseRowDef showsDef = new BrowseRowDef(mActivity.getString(R.string.lbl_tv_series), shows, 60);
 
-        //Insert order based on pref
-        if (mApplication.getDisplayPriority() == DisplayPriorityType.Movies) {
-            mRows.add(moviesDef);
-            mRows.add(showsDef);
-        } else {
-            mRows.add(showsDef);
-            mRows.add(moviesDef);
-        }
+        mRows.add(showsDef);
+        mRows.add(moviesDef);
 
         //Sports
         RecordingQuery sports = new RecordingQuery();
-        sports.setFields(new ItemFields[]{ItemFields.Overview, ItemFields.PrimaryImageAspectRatio});
+        sports.setFields(new ItemFields[]{
+                ItemFields.Overview,
+                ItemFields.PrimaryImageAspectRatio,
+                ItemFields.ChildCount
+        });
         sports.setUserId(TvApp.getApplication().getCurrentUser().getId());
         sports.setEnableImages(true);
         sports.setIsSports(true);
@@ -87,7 +91,11 @@ public class BrowseRecordingsFragment extends EnhancedBrowseFragment {
 
         //Kids
         RecordingQuery kids = new RecordingQuery();
-        kids.setFields(new ItemFields[]{ItemFields.Overview, ItemFields.PrimaryImageAspectRatio});
+        kids.setFields(new ItemFields[]{
+                ItemFields.Overview,
+                ItemFields.PrimaryImageAspectRatio,
+                ItemFields.ChildCount
+        });
         kids.setUserId(TvApp.getApplication().getCurrentUser().getId());
         kids.setEnableImages(true);
         kids.setIsKids(true);
@@ -119,7 +127,7 @@ public class BrowseRecordingsFragment extends EnhancedBrowseFragment {
                             programInfo.setId(timer.getId());
                             programInfo.setChannelName(timer.getChannelName());
                             programInfo.setName(Utils.getSafeValue(timer.getName(), "Unknown"));
-                            TvApp.getApplication().getLogger().Warn("No program info for timer %s.  Creating one...", programInfo.getName());
+                            Timber.w("No program info for timer %s.  Creating one...", programInfo.getName());
                             programInfo.setBaseItemType(BaseItemType.Program);
                             programInfo.setTimerId(timer.getId());
                             programInfo.setSeriesTimerId(timer.getSeriesTimerId());
@@ -150,7 +158,6 @@ public class BrowseRecordingsFragment extends EnhancedBrowseFragment {
                     }
 
         });
-
     }
 
     @Override
@@ -162,6 +169,5 @@ public class BrowseRecordingsFragment extends EnhancedBrowseFragment {
         gridRowAdapter.add(new GridButton(SCHEDULE, TvApp.getApplication().getString(R.string.lbl_schedule), R.drawable.tile_port_time));
         gridRowAdapter.add(new GridButton(SERIES, mActivity.getString(R.string.lbl_series_recordings), R.drawable.tile_port_series_timer));
         rowAdapter.add(new ListRow(gridHeader, gridRowAdapter));
-
     }
 }

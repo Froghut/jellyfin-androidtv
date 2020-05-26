@@ -1,12 +1,6 @@
 package org.jellyfin.androidtv.presentation;
 
 import android.graphics.Color;
-import android.graphics.Typeface;
-import androidx.leanback.widget.RowPresenter;
-
-import android.os.Build;
-import android.text.Html;
-import android.text.Spanned;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -15,6 +9,8 @@ import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
 
+import com.google.android.flexbox.FlexboxLayout;
+
 import org.jellyfin.androidtv.R;
 import org.jellyfin.androidtv.TvApp;
 import org.jellyfin.androidtv.details.MyDetailsOverviewRow;
@@ -22,19 +18,18 @@ import org.jellyfin.androidtv.model.InfoItem;
 import org.jellyfin.androidtv.ui.GenreButton;
 import org.jellyfin.androidtv.ui.TextUnderButton;
 import org.jellyfin.androidtv.util.InfoLayoutHelper;
+import org.jellyfin.androidtv.util.TextUtilsKt;
 import org.jellyfin.androidtv.util.Utils;
-
 import org.jellyfin.apiclient.model.dto.BaseItemDto;
 
-/**
- * Created by Eric on 5/22/2015.
- */
+import androidx.leanback.widget.RowPresenter;
+
 public class MyDetailsOverviewRowPresenter extends RowPresenter {
 
     private ViewHolder viewHolder;
 
     public final class ViewHolder extends RowPresenter.ViewHolder {
-        private LinearLayout mGenreRow;
+        private FlexboxLayout mGenreRow;
         private LinearLayout mInfoRow;
         private TextView mTitle;
         private ImageView mPoster;
@@ -51,8 +46,6 @@ public class MyDetailsOverviewRowPresenter extends RowPresenter {
 
         private RelativeLayout mLeftFrame;
 
-        private Typeface roboto;
-
         /**
          * Constructor for ViewHolder.
          *
@@ -60,10 +53,7 @@ public class MyDetailsOverviewRowPresenter extends RowPresenter {
          */
         public ViewHolder(View rootView) {
             super(rootView);
-            roboto = TvApp.getApplication().getDefaultFont();
-
             mTitle = (TextView) rootView.findViewById(R.id.fdTitle);
-            mTitle.setTypeface(roboto);
             mTitle.setShadowLayer(5, 5, 5, Color.BLACK);
             mInfoTitle1 = (TextView) rootView.findViewById(R.id.infoTitle1);
             mInfoTitle2 = (TextView) rootView.findViewById(R.id.infoTitle2);
@@ -74,13 +64,12 @@ public class MyDetailsOverviewRowPresenter extends RowPresenter {
 
             mLeftFrame = (RelativeLayout) rootView.findViewById(R.id.leftFrame);
 
-            mGenreRow = (LinearLayout) rootView.findViewById(R.id.fdGenreRow);
+            mGenreRow = (FlexboxLayout) rootView.findViewById(R.id.fdGenreRow);
             mInfoRow =  (LinearLayout)rootView.findViewById(R.id.fdMainInfoRow);
             mPoster = (ImageView) rootView.findViewById(R.id.mainImage);
             //mStudioImage = (ImageView) rootView.findViewById(R.id.studioImage);
             mButtonRow = (LinearLayout) rootView.findViewById(R.id.fdButtonRow);
             mSummary = (TextView) rootView.findViewById(R.id.fdSummaryText);
-            mSummary.setTypeface(roboto);
 
         }
 
@@ -119,17 +108,8 @@ public class MyDetailsOverviewRowPresenter extends RowPresenter {
 
         // Support simple HTML elements
         String summaryRaw = row.getSummary();
-        if (summaryRaw != null) {
-            Spanned summarySpanned;
-
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-                summarySpanned = Html.fromHtml(summaryRaw, Html.FROM_HTML_MODE_COMPACT);
-            } else {
-                summarySpanned = Html.fromHtml(summaryRaw);
-            }
-
-            vh.mSummary.setText(summarySpanned);
-        }
+        if (summaryRaw != null)
+            vh.mSummary.setText(TextUtilsKt.toHtmlSpanned(summaryRaw));
 
         switch (row.getItem().getBaseItemType()) {
             case Person:
@@ -153,14 +133,14 @@ public class MyDetailsOverviewRowPresenter extends RowPresenter {
 
     }
 
-    private void addGenres(LinearLayout layout, BaseItemDto item) {
+    private void addGenres(FlexboxLayout layout, BaseItemDto item) {
         layout.removeAllViews();
         if (item.getGenres() != null && item.getGenres().size() > 0) {
             boolean first = true;
             for (String genre : item.getGenres()) {
                 if (!first) InfoLayoutHelper.addSpacer(TvApp.getApplication().getCurrentActivity(), layout, "  /  ", 12);
                 first = false;
-                layout.addView(new GenreButton(TvApp.getApplication().getCurrentActivity(), TvApp.getApplication().getDefaultFont(), 14, genre, item.getBaseItemType()));
+                layout.addView(new GenreButton(layout.getContext(), 14, genre, item.getBaseItemType()));
             }
         }
     }
@@ -208,7 +188,7 @@ public class MyDetailsOverviewRowPresenter extends RowPresenter {
 
     public LinearLayout getButtonRow() { return viewHolder.mButtonRow; }
     public ImageView getPosterView() { return viewHolder.mPoster; }
-    public LinearLayout getGenreRow() { return viewHolder.mGenreRow; }
+    public FlexboxLayout getGenreRow() { return viewHolder.mGenreRow; }
     public TextView getSummaryView() { return viewHolder.mSummary; }
     public LinearLayout getInfoRow() { return viewHolder.mInfoRow; }
 

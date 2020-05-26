@@ -16,7 +16,7 @@
     <string name="lbl_suggestions_halloween">Spooky Suggestions</string>
     <string name="lbl_suggestions">Suggestions</string>
     <string name="pref_use_direct_path_summary">Pass the file system path instead of streaming URL</string>
-    <string name="pref_use_direct_path_title">Pass Direct Path</string>
+    <string name="pref_use_direct_path_title">Pass Direct Path for external player</string>
     <string name="pref_external_live_tv_summary">Requires a capable app to play live streams</string>
     <string name="pref_external_live_tv_title">Use External Player for Live TV</string>
     <string name="lbl_song_title">Song Title</string>
@@ -139,10 +139,10 @@
     <string name="lbl_seconds">Seconds</string>
     <string name="lbl_at_any_time">At Any Time</string>
     <string name="lbl_select_date">Select Date</string>
-    <string name="lbl_in_x_days">In %s days</string>
+    <string name="lbl_in_x_days">In %d days</string>
     <string name="lbl_bitstream_dts">Bitstream DTS Audio</string>
     <string name="desc_premieres">Show a row of new episode pilots for any series you watch</string>
-    <string name="lbl_show_premieres">Show Season Premieres on Home Screen</string>
+    <string name="lbl_show_premieres">Show season premieres while browsing</string>
     <string name="lbl_refresh_switching">Refresh Rate Switching</string>
     <string name="desc_use_vlc_livetv">Use VLC for direct streaming live TV when available</string>
     <string name="lbl_vertical_stretch">Vertical Stretch</string>
@@ -291,7 +291,6 @@
     <string name="lbl_logout">Logout</string>
     <string name="lbl_settings">Settings</string>
     <string name="pref_general">General</string>
-    <string name="pref_auto_logoff_title">Auto Logoff Timeout</string>
     <string name="chapters">Chapters</string>
     <string name="lbl_image_size">Image Size</string>
     <string name="lbl_image_type">Image Type</string>
@@ -329,4 +328,36 @@
     <string name="play">Play</string>
     <string name="lbl_latest_tv_shows">Latest TV Shows</string>
     <string name="lbl_just_this_once">Just this once</string>
+    <string name="pref_acra_enabled">You will be prompted to submit crash reports</string>
+    <string name="pref_enable_acra">Send crash reports to developers</string>
+    <string name="pref_acra_category">Crash Reporting</string>
+    <string name="pref_media_player">Preferred media player</string>
+    <string name="pref_about_title">About</string>
+    <string name="pref_video_player_external">External app</string>
+    <string name="pref_video_player_vlc">libVLC</string>
+    <string name="pref_video_player_exoplayer">ExoPlayer</string>
+    <string name="pref_video_player_auto">Automatically choose</string>
+    <string name="lbl_my_media">My Media</string>
+    <string name="acra_dialog_text">Would you like to send a crash report to the developers\?
+\n
+\nThis information will be submitted to a third party (tracepot.com).
+\n
+\nThis prompt can be disabled in the Crash Reporting section in the Jellyfin app\'s Settings.</string>
+    <string name="acra_dialog_title">Oh no! Something went wrong.</string>
+    <string name="pref_acra_syslog_disabled">System logs will not be included in crash reports</string>
+    <string name="pref_acra_syslog_enabled">System logs will be included in crash reports</string>
+    <string name="pref_acra_syslog">Include system logs in crash reports. This may include private data from other applications if it was logged at the time of the crash.</string>
+    <string name="pref_acra_alwaysaccept_disabled">A dialog will be displayed before submitting any crash report</string>
+    <string name="pref_acra_alwaysaccept_enabled">Crash reports will be submitted without prompting</string>
+    <string name="pref_acra_alwaysaccept">Submit crash reports without prompting</string>
+    <string name="pref_acra_disabled">Crash reports will not be submitted</string>
+    <string name="pref_libvlc_audio_delay_title">Default Audio Delay for libVLC</string>
+    <string name="pref_next_up_enabled_title">Enable Next Up screen</string>
+    <string name="pref_next_up_enabled_summary">Previews the next queued item before playing</string>
+    <string name="watch_now">Watch now</string>
+    <string name="pref_next_up_timeout_title">Next Up timer duration</string>
+    <string name="pref_next_up_timeout_summary">How long to wait before playing the next item</string>
+    <string name="pref_app_theme">App Theme</string>
+    <string name="pref_theme_emerald">Classic Emerald</string>
+    <string name="pref_theme_dark">Dark (Default)</string>
 </resources>

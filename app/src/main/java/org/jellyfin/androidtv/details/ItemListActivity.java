@@ -4,10 +4,8 @@ import android.app.AlertDialog;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.graphics.Color;
-import android.graphics.Typeface;
 import android.os.Bundle;
 import android.os.Handler;
-import androidx.leanback.app.BackgroundManager;
 import android.util.DisplayMetrics;
 import android.view.Gravity;
 import android.view.KeyEvent;
@@ -21,13 +19,13 @@ import android.widget.RelativeLayout;
 import android.widget.ScrollView;
 import android.widget.TextView;
 
+import com.google.android.flexbox.FlexboxLayout;
 import com.squareup.picasso.Picasso;
 import com.squareup.picasso.Target;
 
 import org.jellyfin.androidtv.R;
 import org.jellyfin.androidtv.TvApp;
 import org.jellyfin.androidtv.base.BaseActivity;
-import org.jellyfin.androidtv.base.IKeyListener;
 import org.jellyfin.androidtv.imagehandling.PicassoBackgroundManagerTarget;
 import org.jellyfin.androidtv.itemhandling.BaseRowItem;
 import org.jellyfin.androidtv.itemhandling.ItemLauncher;
@@ -47,13 +45,6 @@ import org.jellyfin.androidtv.util.MathUtils;
 import org.jellyfin.androidtv.util.Utils;
 import org.jellyfin.androidtv.util.apiclient.BaseItemUtils;
 import org.jellyfin.androidtv.util.apiclient.PlaybackHelper;
-
-import java.util.ArrayList;
-import java.util.Calendar;
-import java.util.Collections;
-import java.util.Date;
-import java.util.List;
-
 import org.jellyfin.apiclient.interaction.EmptyResponse;
 import org.jellyfin.apiclient.interaction.Response;
 import org.jellyfin.apiclient.model.dto.BaseItemDto;
@@ -66,6 +57,15 @@ import org.jellyfin.apiclient.model.querying.ItemFilter;
 import org.jellyfin.apiclient.model.querying.ItemSortBy;
 import org.jellyfin.apiclient.model.querying.ItemsResult;
 
+import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.Collections;
+import java.util.Date;
+import java.util.List;
+
+import androidx.leanback.app.BackgroundManager;
+import timber.log.Timber;
+
 public class ItemListActivity extends BaseActivity {
 
     private int BUTTON_SIZE;
@@ -73,7 +73,7 @@ public class ItemListActivity extends BaseActivity {
     public static final String VIDEO_QUEUE = "VIDEO_QUEUE";
 
     private TextView mTitle;
-    private LinearLayout mGenreRow;
+    private FlexboxLayout mGenreRow;
     private ImageView mPoster;
     private TextView mSummary;
     private LinearLayout mButtonRow;
@@ -100,8 +100,6 @@ public class ItemListActivity extends BaseActivity {
     private boolean firstTime = true;
     private Calendar lastUpdated = Calendar.getInstance();
 
-    private Typeface roboto;
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -109,18 +107,15 @@ public class ItemListActivity extends BaseActivity {
 
         mApplication = TvApp.getApplication();
         mActivity = this;
-        roboto = mApplication.getDefaultFont();
         BUTTON_SIZE = Utils.convertDpToPixel(this, 35);
 
         mTitle = (TextView) findViewById(R.id.fdTitle);
-        mTitle.setTypeface(roboto);
         mTitle.setShadowLayer(5, 5, 5, Color.BLACK);
         mTitle.setText(getString(R.string.loading));
-        mGenreRow = (LinearLayout) findViewById(R.id.fdGenreRow);
+        mGenreRow = (FlexboxLayout) findViewById(R.id.fdGenreRow);
         mPoster = (ImageView) findViewById(R.id.mainImage);
         mButtonRow = (LinearLayout) findViewById(R.id.fdButtonRow);
         mSummary = (TextView) findViewById(R.id.fdSummaryText);
-        mSummary.setTypeface(roboto);
         mItemList = (ItemListView) findViewById(R.id.songs);
         mScrollView = (ScrollView) findViewById(R.id.scrollView);
 
@@ -158,41 +153,6 @@ public class ItemListActivity extends BaseActivity {
             }
         });
 
-        //Key listener
-        registerKeyListener(new IKeyListener() {
-            @Override
-            public boolean onKeyUp(int key, KeyEvent event) {
-                if (MediaManager.isPlayingAudio()) {
-                    switch (key) {
-                        case KeyEvent.KEYCODE_MEDIA_PAUSE:
-                        case KeyEvent.KEYCODE_MEDIA_PLAY_PAUSE:
-                            if (MediaManager.isPlayingAudio()) MediaManager.pauseAudio(); else MediaManager.resumeAudio();
-                            return true;
-                        case KeyEvent.KEYCODE_MEDIA_NEXT:
-                        case KeyEvent.KEYCODE_MEDIA_FAST_FORWARD:
-                            MediaManager.nextAudioItem();
-                            return true;
-                        case KeyEvent.KEYCODE_MEDIA_PREVIOUS:
-                        case KeyEvent.KEYCODE_MEDIA_REWIND:
-                            MediaManager.prevAudioItem();
-                            return true;
-                        case KeyEvent.KEYCODE_MENU:
-                            showMenu(mCurrentRow, false);
-                            return true;
-                        }
-                } else if (mCurrentRow != null){
-                    switch (key) {
-                        case KeyEvent.KEYCODE_MEDIA_PLAY:
-                        case KeyEvent.KEYCODE_MEDIA_PLAY_PAUSE:
-                        case KeyEvent.KEYCODE_MENU:
-                            showMenu(mCurrentRow, false);
-                            return true;
-                    }
-                }
-                return false;
-            }
-        });
-
         BackgroundManager backgroundManager = BackgroundManager.getInstance(this);
         backgroundManager.attach(getWindow());
         mBackgroundTarget = new PicassoBackgroundManagerTarget(backgroundManager);
@@ -200,6 +160,41 @@ public class ItemListActivity extends BaseActivity {
         mItemId = getIntent().getStringExtra("ItemId");
         loadItem(mItemId);
 
+    }
+
+
+
+    @Override
+    public boolean onKeyUp(int keyCode, KeyEvent event) {
+        if (MediaManager.isPlayingAudio()) {
+            switch (keyCode) {
+                case KeyEvent.KEYCODE_MEDIA_PAUSE:
+                case KeyEvent.KEYCODE_MEDIA_PLAY_PAUSE:
+                    if (MediaManager.isPlayingAudio()) MediaManager.pauseAudio();
+                    else MediaManager.resumeAudio();
+                    return true;
+                case KeyEvent.KEYCODE_MEDIA_NEXT:
+                case KeyEvent.KEYCODE_MEDIA_FAST_FORWARD:
+                    MediaManager.nextAudioItem();
+                    return true;
+                case KeyEvent.KEYCODE_MEDIA_PREVIOUS:
+                case KeyEvent.KEYCODE_MEDIA_REWIND:
+                    MediaManager.prevAudioItem();
+                    return true;
+                case KeyEvent.KEYCODE_MENU:
+                    showMenu(mCurrentRow, false);
+                    return true;
+            }
+        } else if (mCurrentRow != null) {
+            switch (keyCode) {
+                case KeyEvent.KEYCODE_MEDIA_PLAY:
+                case KeyEvent.KEYCODE_MEDIA_PLAY_PAUSE:
+                case KeyEvent.KEYCODE_MENU:
+                    showMenu(mCurrentRow, false);
+                    return true;
+            }
+        }
+        return false;
     }
 
     @Override
@@ -210,7 +205,7 @@ public class ItemListActivity extends BaseActivity {
         // and fire it to be sure we're updated
         mAudioEventListener.onPlaybackStateChange(MediaManager.isPlayingAudio() ? PlaybackController.PlaybackState.PLAYING : PlaybackController.PlaybackState.IDLE, MediaManager.getCurrentAudioItem());
 
-        if (!firstTime && mApplication.getLastPlayback().after(lastUpdated)) {
+        if (!firstTime && mApplication.dataRefreshService.getLastPlayback() > lastUpdated.getTimeInMillis()) {
             if (mItemId.equals(VIDEO_QUEUE)) {
                 //update this in case it changed - delay to allow for the changes
                 new Handler().postDelayed(new Runnable() {
@@ -260,7 +255,7 @@ public class ItemListActivity extends BaseActivity {
     private AudioEventListener mAudioEventListener = new AudioEventListener() {
         @Override
         public void onPlaybackStateChange(PlaybackController.PlaybackState newState, BaseItemDto currentItem) {
-            TvApp.getApplication().getLogger().Info("Got playback state change event "+newState+" for item "+(currentItem != null ? currentItem.getName() : "<unknown>"));
+            Timber.i("Got playback state change event %s for item %s", newState.toString(), currentItem != null ? currentItem.getName() : "<unknown>");
 
             if (newState != PlaybackController.PlaybackState.PLAYING || currentItem == null) {
                 if (mCurrentlyPlayingRow != null) mCurrentlyPlayingRow.updateCurrentTime(-1);
@@ -287,7 +282,7 @@ public class ItemListActivity extends BaseActivity {
     };
 
     private void showMenu(final ItemRowView row, boolean showOpen) {
-        PopupMenu menu = Utils.createPopupMenu(this, this.getCurrentFocus(), Gravity.RIGHT);
+        PopupMenu menu = Utils.createPopupMenu(this, row != null? row : getCurrentFocus(), Gravity.RIGHT);
         int order = 0;
         if (showOpen) {
             MenuItem open = menu.getMenu().add(0, 0, order++, R.string.lbl_open);
@@ -344,7 +339,6 @@ public class ItemListActivity extends BaseActivity {
         }
 
         menu.show();
-
     }
 
     private void loadItem(String id) {
@@ -411,7 +405,11 @@ public class ItemListActivity extends BaseActivity {
             switch (mItemId) {
                 case FAV_SONGS:
                     //Get favorited and liked songs from this area
-                    StdItemQuery favSongs = new StdItemQuery(new ItemFields[] {ItemFields.PrimaryImageAspectRatio, ItemFields.Genres});
+                    StdItemQuery favSongs = new StdItemQuery(new ItemFields[] {
+                            ItemFields.PrimaryImageAspectRatio,
+                            ItemFields.Genres,
+                            ItemFields.ChildCount
+                    });
                     favSongs.setParentId(getIntent().getStringExtra("ParentId"));
                     favSongs.setIncludeItemTypes(new String[] {"Audio"});
                     favSongs.setRecursive(true);
@@ -431,7 +429,12 @@ public class ItemListActivity extends BaseActivity {
                     PlaylistItemQuery playlistSongs = new PlaylistItemQuery();
                     playlistSongs.setId(mBaseItem.getId());
                     playlistSongs.setUserId(TvApp.getApplication().getCurrentUser().getId());
-                    playlistSongs.setFields(new ItemFields[]{ItemFields.PrimaryImageAspectRatio, ItemFields.Genres, ItemFields.Chapters});
+                    playlistSongs.setFields(new ItemFields[]{
+                            ItemFields.PrimaryImageAspectRatio,
+                            ItemFields.Genres,
+                            ItemFields.Chapters,
+                            ItemFields.ChildCount
+                    });
                     playlistSongs.setLimit(150);
                     TvApp.getApplication().getApiClient().GetPlaylistItems(playlistSongs, itemResponse);
                     break;
@@ -440,14 +443,16 @@ public class ItemListActivity extends BaseActivity {
             StdItemQuery songs = new StdItemQuery();
             songs.setParentId(mBaseItem.getId());
             songs.setRecursive(true);
-            songs.setFields(new ItemFields[]{ItemFields.PrimaryImageAspectRatio, ItemFields.Genres});
+            songs.setFields(new ItemFields[]{
+                    ItemFields.PrimaryImageAspectRatio,
+                    ItemFields.Genres,
+                    ItemFields.ChildCount
+            });
             songs.setIncludeItemTypes(new String[]{"Audio"});
             songs.setSortBy(new String[] {ItemSortBy.SortName});
             songs.setLimit(200);
             mApplication.getApiClient().GetItemsAsync(songs, itemResponse);
         }
-
-
     }
 
     private Response<ItemsResult> itemResponse = new Response<ItemsResult>() {
@@ -469,8 +474,6 @@ public class ItemListActivity extends BaseActivity {
                     //update our status
                     mAudioEventListener.onPlaybackStateChange(PlaybackController.PlaybackState.PLAYING, MediaManager.getCurrentAudioItem());
                 }
-                //create list background gradient
-                mItemList.setBackground(mApplication.getCurrentBackgroundGradient());
 
                 updateBackdrop();
             }
@@ -478,7 +481,7 @@ public class ItemListActivity extends BaseActivity {
 
         @Override
         public void onError(Exception exception) {
-            mApplication.getLogger().ErrorException("Error loading", exception);
+            Timber.e(exception, "Error loading");
             Utils.showToast(mActivity, exception.getLocalizedMessage());
         }
     };
@@ -510,13 +513,13 @@ public class ItemListActivity extends BaseActivity {
         }
     }
 
-    private void addGenres(LinearLayout layout) {
+    private void addGenres(FlexboxLayout layout) {
         if (mBaseItem.getGenres() != null && mBaseItem.getGenres().size() > 0) {
             boolean first = true;
             for (String genre : mBaseItem.getGenres()) {
                 if (!first) InfoLayoutHelper.addSpacer(this, layout, "  /  ", 14);
                 first = false;
-                layout.addView(new GenreButton(this, roboto, 16, genre, mBaseItem.getBaseItemType()));
+                layout.addView(new GenreButton(this, 16, genre, mBaseItem.getBaseItemType()));
             }
         }
     }
@@ -578,7 +581,10 @@ public class ItemListActivity extends BaseActivity {
                     @Override
                     public void onClick(View v) {
                         if (mItems.size() > 0) {
-                            if (mBaseItem.getId().equals(VIDEO_QUEUE) || mBaseItem.getId().equals(FAV_SONGS) || "Playlist".equals(mBaseItem.getType())) {
+                            if (mBaseItem.getId().equals(VIDEO_QUEUE)
+                                    || mBaseItem.getId().equals(FAV_SONGS)
+                                    || mBaseItem.getBaseItemType() == BaseItemType.Playlist
+                                    || mBaseItem.getBaseItemType() == BaseItemType.MusicAlbum) {
                                 List<BaseItemDto> shuffled = new ArrayList<>(mItems);
                                 Collections.shuffle(shuffled);
                                 play(shuffled);
@@ -621,7 +627,7 @@ public class ItemListActivity extends BaseActivity {
                             public void onResponse(UserItemDataDto response) {
                                 mBaseItem.setUserData(response);
                                 ((ImageButton) v).setImageResource(response.getIsFavorite() ? R.drawable.ic_heart_red : R.drawable.ic_heart);
-                                TvApp.getApplication().setLastFavoriteUpdate(System.currentTimeMillis());
+                                TvApp.getApplication().dataRefreshService.setLastFavoriteUpdate(System.currentTimeMillis());
                             }
                         });
                     }
@@ -651,7 +657,7 @@ public class ItemListActivity extends BaseActivity {
                                     .setPositiveButton("Clear", new DialogInterface.OnClickListener() {
                                         public void onClick(DialogInterface dialog, int whichButton) {
                                             MediaManager.setCurrentVideoQueue(new ArrayList<BaseItemDto>());
-                                            mApplication.setLastVideoQueueChange(System.currentTimeMillis());
+                                            mApplication.dataRefreshService.setLastVideoQueueChange(System.currentTimeMillis());
                                             finish();
                                         }
                                     })
@@ -672,7 +678,7 @@ public class ItemListActivity extends BaseActivity {
                                                 @Override
                                                 public void onResponse() {
                                                     Utils.showToast(mActivity, mBaseItem.getName() + " Deleted");
-                                                    TvApp.getApplication().setLastDeletedItemId(mBaseItem.getId());
+                                                    TvApp.getApplication().dataRefreshService.setLastDeletedItemId(mBaseItem.getId());
                                                     finish();
                                                 }
 
@@ -763,5 +769,4 @@ public class ItemListActivity extends BaseActivity {
                     .into(mBackgroundTarget);
         }
     }
-
 }

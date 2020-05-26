@@ -4,7 +4,6 @@ import android.app.AlertDialog;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.graphics.Color;
-import android.graphics.Typeface;
 import android.graphics.drawable.ColorDrawable;
 import android.os.AsyncTask;
 import android.os.Bundle;
@@ -49,6 +48,10 @@ import org.jellyfin.androidtv.util.InfoLayoutHelper;
 import org.jellyfin.androidtv.util.TimeUtils;
 import org.jellyfin.androidtv.util.Utils;
 import org.jellyfin.androidtv.util.apiclient.PlaybackHelper;
+import org.jellyfin.apiclient.interaction.EmptyResponse;
+import org.jellyfin.apiclient.interaction.Response;
+import org.jellyfin.apiclient.model.dto.BaseItemDto;
+import org.jellyfin.apiclient.model.livetv.ChannelInfoDto;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -56,10 +59,7 @@ import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
 
-import org.jellyfin.apiclient.interaction.EmptyResponse;
-import org.jellyfin.apiclient.interaction.Response;
-import org.jellyfin.apiclient.model.dto.BaseItemDto;
-import org.jellyfin.apiclient.model.livetv.ChannelInfoDto;
+import timber.log.Timber;
 
 public class LiveTvGuideActivity extends BaseActivity implements ILiveTvGuide {
     public static final int ROW_HEIGHT = Utils.convertDpToPixel(TvApp.getApplication(),55);
@@ -108,26 +108,19 @@ public class LiveTvGuideActivity extends BaseActivity implements ILiveTvGuide {
 
     private Handler mHandler = new Handler();
 
-    private Typeface roboto;
-
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
         mActivity = this;
-        roboto = TvApp.getApplication().getDefaultFont();
 
         setContentView(R.layout.live_tv_guide);
 
         mDisplayDate = findViewById(R.id.displayDate);
         mTitle = findViewById(R.id.title);
-        mTitle.setTypeface(roboto);
         mSummary = findViewById(R.id.summary);
-        mSummary.setTypeface(roboto);
         mChannelStatus = findViewById(R.id.channelsStatus);
         mFilterStatus = findViewById(R.id.filterStatus);
-        mChannelStatus.setTypeface(roboto);
-        mFilterStatus.setTypeface(roboto);
         mChannelStatus.setTextColor(Color.GRAY);
         mFilterStatus.setTextColor(Color.GRAY);
         mInfoRow = findViewById(R.id.infoRow);
@@ -389,7 +382,7 @@ public class LiveTvGuideActivity extends BaseActivity implements ILiveTvGuide {
 
     private void pageGuideTo(long startTime) {
         if (startTime < System.currentTimeMillis()) startTime = System.currentTimeMillis(); // don't allow the past
-        TvApp.getApplication().getLogger().Info("page to "+new Date(startTime));
+        Timber.i("page to %s", (new Date(startTime)).toString());
         TvManager.forceReload(); // don't allow cache
         if (mSelectedProgram != null) {
             mFirstFocusChannelId = mSelectedProgram.getChannelId();
@@ -641,7 +634,7 @@ public class LiveTvGuideActivity extends BaseActivity implements ILiveTvGuide {
             mCurrentDisplayChannelStartNdx = start;
             mCurrentDisplayChannelEndNdx = end - 1;
         }
-        TvApp.getApplication().getLogger().Debug("*** Display channels pre-execute");
+        Timber.d("*** Display channels pre-execute");
         mSpinner.setVisibility(View.VISIBLE);
 
         loadProgramData();
@@ -655,7 +648,7 @@ public class LiveTvGuideActivity extends BaseActivity implements ILiveTvGuide {
         TvManager.getProgramsAsync(mCurrentDisplayChannelStartNdx, mCurrentDisplayChannelEndNdx, mCurrentGuideStart, mCurrentGuideEnd, new EmptyResponse() {
             @Override
             public void onResponse() {
-                TvApp.getApplication().getLogger().Debug("*** Programs response");
+                Timber.d("*** Programs response");
                 if (mDisplayProgramsTask != null) mDisplayProgramsTask.cancel(true);
                 mDisplayProgramsTask = new DisplayProgramsTask();
                 mDisplayProgramsTask.execute(mCurrentDisplayChannelStartNdx, mCurrentDisplayChannelEndNdx);
@@ -671,7 +664,7 @@ public class LiveTvGuideActivity extends BaseActivity implements ILiveTvGuide {
 
         @Override
         protected void onPreExecute() {
-            TvApp.getApplication().getLogger().Debug("*** Display programs pre-execute");
+            Timber.d("*** Display programs pre-execute");
             mChannels.removeAllViews();
             mProgramRows.removeAllViews();
 
@@ -697,7 +690,7 @@ public class LiveTvGuideActivity extends BaseActivity implements ILiveTvGuide {
             int end = params[1];
             boolean first = true;
 
-            TvApp.getApplication().getLogger().Debug("*** About to iterate programs");
+            Timber.d("*** About to iterate programs");
             LinearLayout prevRow = null;
             for (int i = start; i <= end; i++) {
                 if (isCancelled()) return null;
@@ -743,7 +736,7 @@ public class LiveTvGuideActivity extends BaseActivity implements ILiveTvGuide {
 
         @Override
         protected void onPostExecute(Void aVoid) {
-            TvApp.getApplication().getLogger().Debug("*** Display programs post execute");
+            Timber.d("*** Display programs post execute");
             if (mCurrentDisplayChannelEndNdx < mAllChannels.size()-1 && !mFilters.any()) {
                 // Show a paging row for channels below
                 int pageDnEnd = mCurrentDisplayChannelEndNdx + PAGE_SIZE;
@@ -901,7 +894,7 @@ public class LiveTvGuideActivity extends BaseActivity implements ILiveTvGuide {
 
                     @Override
                     public void onError(Exception exception) {
-                        TvApp.getApplication().getLogger().ErrorException("Unable to get program details", exception);
+                        Timber.e(exception, "Unable to get program details");
                         detailUpdateInternal();
                     }
                 });

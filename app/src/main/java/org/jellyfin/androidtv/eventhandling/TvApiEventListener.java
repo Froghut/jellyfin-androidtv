@@ -1,20 +1,21 @@
 package org.jellyfin.androidtv.eventhandling;
 
+import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
+import android.os.Handler;
+import android.widget.Toast;
 
 import org.jellyfin.androidtv.R;
 import org.jellyfin.androidtv.TvApp;
 import org.jellyfin.androidtv.itemhandling.BaseRowItem;
 import org.jellyfin.androidtv.itemhandling.ItemLauncher;
 import org.jellyfin.androidtv.playback.MediaManager;
+import org.jellyfin.androidtv.playback.PlaybackController;
+import org.jellyfin.androidtv.playback.PlaybackOverlayActivity;
 import org.jellyfin.androidtv.querying.StdItemQuery;
 import org.jellyfin.androidtv.util.Utils;
 import org.jellyfin.androidtv.util.apiclient.PlaybackHelper;
-
-import java.util.Arrays;
-import java.util.Calendar;
-
 import org.jellyfin.apiclient.interaction.ApiClient;
 import org.jellyfin.apiclient.interaction.ApiEventListener;
 import org.jellyfin.apiclient.interaction.Response;
@@ -23,29 +24,29 @@ import org.jellyfin.apiclient.model.entities.LibraryUpdateInfo;
 import org.jellyfin.apiclient.model.querying.ItemFields;
 import org.jellyfin.apiclient.model.querying.ItemsResult;
 import org.jellyfin.apiclient.model.session.BrowseRequest;
-import org.jellyfin.apiclient.model.session.GeneralCommand;
+import org.jellyfin.apiclient.model.session.MessageCommand;
 import org.jellyfin.apiclient.model.session.PlayRequest;
 import org.jellyfin.apiclient.model.session.PlaystateRequest;
 import org.jellyfin.apiclient.model.session.SessionInfoDto;
 
-/**
- * Created by Eric on 2/14/2015.
- */
-public class TvApiEventListener extends ApiEventListener {
+import java.util.Arrays;
 
+import timber.log.Timber;
+
+public class TvApiEventListener extends ApiEventListener {
     @Override
     public void onPlaybackStopped(ApiClient client, SessionInfoDto info) {
         TvApp app = TvApp.getApplication();
-        app.getLogger().Debug("Got Playback stopped message from server");
+        Timber.d("Got Playback stopped message from server");
         if (info.getUserId().equals(app.getCurrentUser().getId())) {
-            app.setLastPlayback(Calendar.getInstance());
+            app.dataRefreshService.setLastPlayback(System.currentTimeMillis());
             if (info.getNowPlayingItem() == null) return;
             switch (info.getNowPlayingItem().getType()) {
                 case "Movie":
-                    TvApp.getApplication().setLastMoviePlayback(Calendar.getInstance());
+                    TvApp.getApplication().dataRefreshService.setLastMoviePlayback(System.currentTimeMillis());
                     break;
                 case "Episode":
-                    TvApp.getApplication().setLastTvPlayback(Calendar.getInstance());
+                    TvApp.getApplication().dataRefreshService.setLastTvPlayback(System.currentTimeMillis());
                     break;
 
             }
@@ -54,63 +55,74 @@ public class TvApiEventListener extends ApiEventListener {
 
     @Override
     public void onLibraryChanged(ApiClient client, LibraryUpdateInfo info) {
-        TvApp.getApplication().getLogger().Debug("Library Changed. Added %o items. Removed %o items. Changed %o items.", info.getItemsAdded().size(), info.getItemsRemoved().size(), info.getItemsUpdated().size());
-        if (info.getItemsAdded().size() > 0 || info.getItemsRemoved().size() > 0) TvApp.getApplication().setLastLibraryChange(Calendar.getInstance());
-    }
-
-    @Override
-    public void onGeneralCommand(ApiClient client, GeneralCommand command) {
-        TvApp.getApplication().getLogger().Info("General command is: "+command.getName());
-        switch (command.getName().toLowerCase()) {
-            case "mute":
-                TvApp.getApplication().setAudioMuted(true);
-                break;
-            case "unmute":
-                TvApp.getApplication().setAudioMuted(false);
-                break;
-            case "togglemute":
-                TvApp.getApplication().setAudioMuted(!TvApp.getApplication().isAudioMuted());
-                break;
-        }
+        Timber.d("Library Changed. Added %o items. Removed %o items. Changed %o items.", info.getItemsAdded().size(), info.getItemsRemoved().size(), info.getItemsUpdated().size());
+        if (info.getItemsAdded().size() > 0 || info.getItemsRemoved().size() > 0)
+            TvApp.getApplication().dataRefreshService.setLastLibraryChange(System.currentTimeMillis());
     }
 
     @Override
     public void onPlaystateCommand(ApiClient client, PlaystateRequest command) {
-        switch (command.getCommand()) {
+        PlaybackController playbackController = TvApp.getApplication().getPlaybackController();
 
+        switch (command.getCommand()) {
             case Stop:
-                TvApp.getApplication().stopPlayback();
+                if (MediaManager.isPlayingAudio())
+                    MediaManager.stopAudio();
+                else {
+                    Activity currentActivity = TvApp.getApplication().getCurrentActivity();
+
+                    if(currentActivity instanceof PlaybackOverlayActivity)
+                        currentActivity.finish();
+                }
                 break;
             case Pause:
-                TvApp.getApplication().pausePlayback();
+                if (MediaManager.isPlayingAudio())
+                    MediaManager.pauseAudio();
+                else if(playbackController != null)
+                    playbackController.playPause();
                 break;
             case Unpause:
-                TvApp.getApplication().unPausePlayback();
+                if (MediaManager.hasAudioQueueItems())
+                    MediaManager.resumeAudio();
+                else if(playbackController != null)
+                    playbackController.playPause();
                 break;
             case NextTrack:
-                TvApp.getApplication().playbackNext();
+                if (MediaManager.hasAudioQueueItems())
+                    MediaManager.nextAudioItem();
+                else if(playbackController != null)
+                    playbackController.next();
                 break;
             case PreviousTrack:
-                TvApp.getApplication().playbackPrev();
+                if (MediaManager.hasAudioQueueItems())
+                    MediaManager.prevAudioItem();
+                else if(playbackController != null)
+                    playbackController.prev();
                 break;
             case Seek:
-                Long pos = command.getSeekPositionTicks() / 10000;
-                TvApp.getApplication().playbackSeek(pos.intValue());
+                if (playbackController == null) break;
+
+                long pos = command.getSeekPositionTicks() / 10000;
+                playbackController.seek(pos);
                 break;
             case Rewind:
-                TvApp.getApplication().playbackJumpBack();
+                if (playbackController == null) break;
+
+                playbackController.skip(-11000);
                 break;
             case FastForward:
-                TvApp.getApplication().playbackJump();
+                if (playbackController == null) break;
+
+                playbackController.skip(30000);
                 break;
         }
     }
 
     @Override
     public void onBrowseCommand(ApiClient client, BrowseRequest command) {
-        TvApp.getApplication().getLogger().Debug("Browse command received");
+        Timber.d("Browse command received");
         if (TvApp.getApplication().getCurrentActivity() == null || videoPlaying()) {
-            TvApp.getApplication().getLogger().Info("Command ignored due to no activity or playback in progress");
+            Timber.i("Command ignored due to no activity or playback in progress");
             return;
         }
         client.GetItemAsync(command.getItemId(), TvApp.getApplication().getCurrentUser().getId(), new Response<BaseItemDto>() {
@@ -139,12 +151,15 @@ public class TvApiEventListener extends ApiEventListener {
         }
 
         if (command.getItemIds().length > 1) {
-            TvApp.getApplication().getLogger().Info("Playing multiple items by remote request");
+            Timber.i("Playing multiple items by remote request");
             if (TvApp.getApplication().getCurrentActivity() == null) {
-                TvApp.getApplication().getLogger().Error("No current activity.  Cannot play");
+                Timber.e("No current activity.  Cannot play");
                 return;
             }
-            StdItemQuery query = new StdItemQuery(new ItemFields[] {ItemFields.MediaSources});
+            StdItemQuery query = new StdItemQuery(new ItemFields[]{
+                    ItemFields.MediaSources,
+                    ItemFields.ChildCount
+            });
             query.setIds(command.getItemIds());
             TvApp.getApplication().getApiClient().GetItemsAsync(query, new Response<ItemsResult>() {
                 @Override
@@ -168,10 +183,15 @@ public class TvApiEventListener extends ApiEventListener {
 
         } else {
             if (command.getItemIds().length > 0) {
-                TvApp.getApplication().getLogger().Info("Playing single item by remote request");
+                Timber.i("Playing single item by remote request");
                 Context context = TvApp.getApplication().getCurrentActivity() != null ? TvApp.getApplication().getCurrentActivity() : TvApp.getApplication();
                 PlaybackHelper.retrieveAndPlay(command.getItemIds()[0], false, command.getStartPositionTicks() != null ? command.getStartPositionTicks() : 0, context);
             }
         }
+    }
+
+    @Override
+    public void onMessageCommand(ApiClient client, MessageCommand command) {
+        new Handler(TvApp.getApplication().getMainLooper()).post(() -> Toast.makeText(TvApp.getApplication(), command.getText(), Toast.LENGTH_LONG).show());
     }
 }

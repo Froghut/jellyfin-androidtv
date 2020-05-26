@@ -2,10 +2,6 @@ package org.jellyfin.androidtv.livetv;
 
 import android.app.Activity;
 import android.graphics.Typeface;
-import androidx.leanback.widget.ArrayObjectAdapter;
-import androidx.leanback.widget.HeaderItem;
-import androidx.leanback.widget.ListRow;
-import androidx.leanback.widget.Presenter;
 import android.text.format.DateUtils;
 import android.widget.LinearLayout;
 import android.widget.TextView;
@@ -14,21 +10,10 @@ import org.jellyfin.androidtv.R;
 import org.jellyfin.androidtv.TvApp;
 import org.jellyfin.androidtv.itemhandling.ItemRowAdapter;
 import org.jellyfin.androidtv.model.LiveTvPrefs;
+import org.jellyfin.androidtv.preferences.SystemPreferences;
 import org.jellyfin.androidtv.ui.ProgramGridCell;
 import org.jellyfin.androidtv.util.TimeUtils;
 import org.jellyfin.androidtv.util.Utils;
-
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Calendar;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.Date;
-import java.util.GregorianCalendar;
-import java.util.HashMap;
-import java.util.List;
-import java.util.TimeZone;
-
 import org.jellyfin.apiclient.interaction.EmptyResponse;
 import org.jellyfin.apiclient.interaction.Response;
 import org.jellyfin.apiclient.model.dto.BaseItemDto;
@@ -44,6 +29,24 @@ import org.jellyfin.apiclient.model.livetv.TimerQuery;
 import org.jellyfin.apiclient.model.querying.ItemsResult;
 import org.jellyfin.apiclient.model.results.ChannelInfoDtoResult;
 import org.jellyfin.apiclient.model.results.TimerInfoDtoResult;
+
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Calendar;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.Date;
+import java.util.GregorianCalendar;
+import java.util.HashMap;
+import java.util.List;
+import java.util.TimeZone;
+
+import androidx.leanback.widget.ArrayObjectAdapter;
+import androidx.leanback.widget.HeaderItem;
+import androidx.leanback.widget.ListRow;
+import androidx.leanback.widget.Presenter;
+
+import timber.log.Timber;
 
 /**
  * Created by Eric on 9/4/2015.
@@ -62,18 +65,19 @@ public class TvManager {
     private static LiveTvPrefs prefs = new LiveTvPrefs();
 
     public static String getLastLiveTvChannel() {
-        return TvApp.getApplication().getSystemPrefs().getString("sys_pref_last_tv_channel", null);
+        return TvApp.getApplication().getSystemPreferences().getLiveTvLastChannel();
     }
 
     public static void setLastLiveTvChannel(String id) {
-        TvApp.getApplication().getSystemPrefs().edit().putString("sys_pref_prev_tv_channel", TvApp.getApplication().getSystemPrefs().getString("sys_pref_last_tv_channel", null)).apply();
-        TvApp.getApplication().getSystemPrefs().edit().putString("sys_pref_last_tv_channel", id).apply();
+        SystemPreferences systemPreferences = TvApp.getApplication().getSystemPreferences();
+        systemPreferences.setLiveTvPrevChannel(systemPreferences.getLiveTvLastChannel());
+        systemPreferences.setLiveTvLastChannel(id);
         updateLastPlayedDate(id);
         sortChannels();
     }
 
     public static String getPrevLiveTvChannel() {
-        return TvApp.getApplication().getSystemPrefs().getString("sys_pref_prev_tv_channel", null);
+        return TvApp.getApplication().getSystemPreferences().getLiveTvPrevChannel();
     }
 
     public static List<ChannelInfoDto> getAllChannels() {
@@ -122,7 +126,7 @@ public class TvManager {
     public static void loadAllChannels(final Response<Integer> outerResponse) {
         //Get channels if needed
         if (allChannels != null && allChannels.size() > 0) {
-            TvApp.getApplication().getLogger().Info("*** Channels already loaded - returning %s channels", allChannels.size());
+            Timber.i("*** Channels already loaded - returning %d channels", allChannels.size());
             outerResponse.onResponse(sortChannels());
         } else {
             if (displayPrefs == null) {
@@ -181,7 +185,7 @@ public class TvManager {
 
             @Override
             public void onError(Exception exception) {
-                TvApp.getApplication().getLogger().ErrorException("Error retrieving live tv prefs", exception);
+                Timber.e(exception, "Error retrieving live tv prefs");
                 displayPrefs = new DisplayPreferences();
                 displayPrefs.setCustomPrefs(new HashMap<String, String>());
                 outerResponse.onResponse();
@@ -196,11 +200,11 @@ public class TvManager {
         if (prefs.favsAtTop) query.setEnableFavoriteSorting(true);
         query.setSortOrder("DatePlayed".equals(prefs.channelOrder) ? SortOrder.Descending : null);
         query.setSortBy(new String[] {"DatePlayed".equals(prefs.channelOrder) ? "DatePlayed" : "SortName"});
-        TvApp.getApplication().getLogger().Debug("*** About to load channels");
+        Timber.d("*** About to load channels");
         TvApp.getApplication().getApiClient().GetLiveTvChannelsAsync(query, new Response<ChannelInfoDtoResult>() {
             @Override
             public void onResponse(final ChannelInfoDtoResult response) {
-                TvApp.getApplication().getLogger().Debug("*** channel query response");
+                Timber.d("*** channel query response");
                 allChannels = new ArrayList<>();
                 if (response.getTotalRecordCount() > 0) {
                     Collections.addAll(allChannels, response.getItems());
@@ -268,14 +272,14 @@ public class TvManager {
             query.setMaxStartDate(end.getTime());
             query.setMinEndDate(start.getTime());
 
-            TvApp.getApplication().getLogger().Debug("*** About to get programs");
+            Timber.d("*** About to get programs");
 
             TvApp.getApplication().getApiClient().GetLiveTvProgramsAsync(query, new Response<ItemsResult>() {
                 @Override
                 public void onResponse(ItemsResult response) {
-                    TvApp.getApplication().getLogger().Debug("*** About to build dictionary");
+                    Timber.d("*** About to build dictionary");
                     buildProgramsDict(response.getItems(), start);
-                    TvApp.getApplication().getLogger().Debug("*** Programs retrieval finished");
+                    Timber.d("*** Programs retrieval finished");
 
                     outerResponse.onResponse();
                 }
@@ -405,7 +409,7 @@ public class TvManager {
                         programInfo.setId(timer.getId());
                         programInfo.setChannelName(timer.getChannelName());
                         programInfo.setName(Utils.getSafeValue(timer.getName(), "Unknown"));
-                        TvApp.getApplication().getLogger().Warn("No program info for timer %s.  Creating one...", programInfo.getName());
+                        Timber.w("No program info for timer %s.  Creating one...", programInfo.getName());
                         programInfo.setBaseItemType(BaseItemType.Program);
                         programInfo.setTimerId(timer.getId());
                         programInfo.setSeriesTimerId(timer.getSeriesTimerId());

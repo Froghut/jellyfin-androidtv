@@ -2,7 +2,7 @@
 <resources xmlns:tools="http://schemas.android.com/tools" tools:ignore="MissingTranslation">
     <string name="video_error_unknown_error">Nepodařilo se načíst video</string>
     <string name="txt_loading">Načítá se…</string>
-    <string name="title_activity_select_user">Aktivity při výběru uživatele</string>
+    <string name="title_activity_select_user">Vybrat aktivitu uživatele</string>
     <string name="home_title">Domů</string>
     <string name="btn_cancel">Zrušit</string>
     <string name="byletter_letters">ABCDEFGHIJKLMNOPQRSTUVWXYZ</string>
@@ -20,7 +20,6 @@
     <string name="dpad_entry_desc">Pomocí D-pad na dálkovém ovládání zadejte číselné heslo. Kliknout na tlačítko pro první položku uvedenou na seznamu, nebo dvojklik pro druhou položku. např. jedno kliknutí na tlačítko \"up\" na 1 nebo dvojité kliknutí a uvolnění \"vybere\" 5. Podržte na 1 sekundu a uvolněte, nebo použijte levé tlačítko pro spuštění od začátku.</string>
     <string name="dpad_pw_cancel">* Podržte na 1 vteřinu tlačítko \"dolů\", a uvolněte pokud máte alfa heslo, nebo bude potřeba klávesnice pro vstup</string>
     <string name="chapters">Kapitoly</string>
-    <string name="pref_auto_logoff_title">Časový limit pro automatické odhlášení</string>
     <string name="pref_general">OBECNÉ</string>
     <string name="lbl_settings">Nastavení</string>
     <string name="lbl_logout">Odhlásit</string>
@@ -64,7 +63,7 @@
     <string name="lbl_cast_crew">Herci/Štáb</string>
     <string name="lbl_chapters">Kapitoly</string>
     <string name="lbl_specials">Speciály</string>
-    <string name="lbl_trailers">Trailery</string>
+    <string name="lbl_trailers">Upoutávky</string>
     <string name="lbl_items">Položky</string>
     <string name="lbl_item">Položka</string>
     <string name="lbl_seasons">Sezóny</string>
@@ -90,8 +89,8 @@
     <string name="msg_video_playback_error">"Chyba při přehrávání videa - "</string>
     <string name="lbl_bracket_unknown"><![CDATA[<Unknown>]]></string>
     <string name="msg_access_restricted">Přístup omezen v této době</string>
-    <string name="lbl_trailer">"Trailer "</string>
-    <string name="lbl_play_trailers">Přehrát trailer(y)</string>
+    <string name="lbl_trailer">"Upoutávka "</string>
+    <string name="lbl_play_trailers">Přehrát upoutávky</string>
     <string name="lbl_please_wait">Prosím, čekejte</string>
     <string name="lbl_enter_user_name">Zadejte uživatelské jméno</string>
     <string name="lbl_enter_user_pw">Zadejte uživatelské heslo</string>
@@ -178,12 +177,12 @@
     <string name="lbl_filters">Filtry</string>
     <string name="msg_subtitles_loading">Načítají se titulky...</string>
     <string name="msg_unable_load_subs">Nelze načíst titulky</string>
-    <string name="msg_burn_sub_warning">Vypáleno s titulky může trvat několik minut. Prosím, buďte trpěliví...</string>
+    <string name="msg_burn_sub_warning">Vypálení titulků může trvat několik minut. Čekejte, prosím…</string>
     <string name="lbl_recording">Nahrávání</string>
     <string name="lbl_no_recordings">Žádné nahrávky</string>
-    <string name="lbl_live_tv_guide">Průvodce Live TV</string>
-    <string name="lbl_recorded_tv">TV nahrávky</string>
-    <string name="pref_live_tv_cat">LIVE TV</string>
+    <string name="lbl_live_tv_guide">Programový průvodce</string>
+    <string name="lbl_recorded_tv">Nahrané pořady</string>
+    <string name="pref_live_tv_cat">Televize</string>
     <string name="lbl_programs">Programy</string>
     <string name="lbl_albums">Alba</string>
     <string name="lbl_artists">Úmělci</string>
@@ -213,10 +212,10 @@
     <string name="desc_seasonal_themes">Povolit speciální barvy a návrhy dle období roku</string>
     <string name="lbl_switch_server">Přepnout server</string>
     <string name="lbl_instant_mix">Okamžitý mix</string>
-    <string name="lbl_in_x_days">Za %s dní</string>
+    <string name="lbl_in_x_days">Za %d dní</string>
     <string name="lbl_bitstream_dts">Bitstream DTS zvuk</string>
     <string name="desc_premieres">Zobrazit řadu nových úvodních epizod pro každý seriál, který sledujete</string>
-    <string name="lbl_show_premieres">Na úvodní stránce zobrazovat premiéry nových sérií</string>
+    <string name="lbl_show_premieres">Při procházení zobrazit premiéry sezóny</string>
     <string name="lbl_refresh_switching">Přepínání obnovovacích frekvencí</string>
     <string name="desc_use_vlc_livetv">Pokud je k dispozici, použít VLC pro přímý streaming živé TV</string>
     <string name="lbl_use_vlc_livetv">Pokusit se použít VLC pro živou TV</string>
@@ -248,8 +247,8 @@
     <string name="lbl_reshuffle_queue">Znovu promíchat frontu</string>
     <string name="lbl_warning">Varování</string>
     <string name="sum_enable_cinema_mode">Pokud je povoleno na serveru, zobrazovat úvodníky a náhledy před přehráváním filmu</string>
-    <string name="lbl_direct_stream_live">Přímé vysílání živé TV</string>
-    <string name="msg_error_live_stream">Chyba vysílání živé TV. Opakování pokusu...</string>
+    <string name="lbl_direct_stream_live">Přímý televizní přenos</string>
+    <string name="msg_error_live_stream">Chyba při přenosu televizního vysílání. Opakování pokusu...</string>
     <string name="lbl_now_playing_album">z %s</string>
     <string name="lbl_now_playing_track">%s z %s</string>
     <string name="msg_error_signin">Došlo k chybě při přihlašování prostřednictvím uložených přihlašovacích údajů.</string>
@@ -271,7 +270,7 @@
     <string name="lbl_suggestions_halloween">Strašidelné návrhy</string>
     <string name="lbl_suggestions">Návrhy</string>
     <string name="pref_use_direct_path_summary">Přímé přehrávání namísto streamování</string>
-    <string name="pref_use_direct_path_title">Přímý průchod</string>
+    <string name="pref_use_direct_path_title">Přímý průchod pro externí přehrávače</string>
     <string name="pref_external_live_tv_summary">Vyžaduje vhodnou aplikaci pro přehrávání live streamů</string>
     <string name="pref_external_live_tv_title">Použít externí přehrávač pro Live TV</string>
     <string name="lbl_song_title">Název skladby</string>
@@ -327,6 +326,42 @@
     <string name="lbl_audio_delay">Spoždění zvuku</string>
     <string name="lbl_new_only">Pouze nové</string>
     <string name="lbl_news">Novinky</string>
-    <string name="lbl_colored_backgrounds">Barevná pozadí</string>
-    <string name="lbl_live_broadcasts">Živá vysílání</string>
+    <string name="lbl_colored_backgrounds">Barevné pozadí</string>
+    <string name="lbl_live_broadcasts">Živé vysílání</string>
+    <string name="pref_video_player_external">Externí aplikace</string>
+    <string name="pref_video_player_vlc">libVLC</string>
+    <string name="pref_video_player_exoplayer">ExoPlayer</string>
+    <string name="pref_video_player_auto">Vybrat automaticky</string>
+    <string name="lbl_my_media">Moje média</string>
+    <string name="acra_dialog_text">Chcete vývojářům zaslat chybové hlášení\?
+\n
+\nTyto informace budou poskytnuty třetí straně (tracepot.com).
+\n
+\nTuto výzvu lze zakázat v části Chybové hlášení v nastavení aplikace Jellyfin.</string>
+    <string name="acra_dialog_title">Ale ne! Něco se pokazilo.</string>
+    <string name="pref_acra_syslog_disabled">Systémové záznamy nebudou zahrnuty do chybových hlášení</string>
+    <string name="pref_acra_syslog_enabled">Systémové záznamy budou zahrnuty do chybových hlášení</string>
+    <string name="pref_acra_syslog">Zahrnout systémové protokoly do chybového hlášení. To může zahrnovat soukromá data z jiných aplikací, pokud byla zaznamenána v době selhání.</string>
+    <string name="pref_acra_alwaysaccept_disabled">Před odesláním chybového hlášení se zobrazí dialogové okno</string>
+    <string name="pref_acra_alwaysaccept_enabled">Chybové hlášení bude odesláno bez výzvy</string>
+    <string name="pref_acra_alwaysaccept">Odeslat chybová hlášení bez výzvy</string>
+    <string name="pref_acra_disabled">Chybové hlášení nelze odeslat</string>
+    <string name="pref_acra_enabled">Budete vyzváni k odeslání hlášení o chybách</string>
+    <string name="pref_enable_acra">Odeslat chybové hlášení vývojářům</string>
+    <string name="pref_acra_category">Hlášení chyb</string>
+    <string name="pref_about_title">Obsah</string>
+    <string name="pref_libvlc_audio_delay_title">Výchozí zvuková prodleva pro libVLC</string>
+    <string name="pref_next_up_enabled_title">Povolit obrazovku \"Následuje\"</string>
+    <string name="pref_next_up_enabled_summary">Před přehráním zobrazí náhled příští položky ve frontě</string>
+    <string name="watch_now">Sledovat nyní</string>
+    <string name="pref_next_up_timeout_title">Časový limit pro následující položku</string>
+    <string name="pref_next_up_timeout_summary">Jak dlouho počkat před přehráním další položky</string>
+    <string name="pref_media_player">Preferovaný přehrávač médií</string>
+    <string name="pref_app_theme">Motiv aplikace</string>
+    <string name="pref_theme_dark">Tmavý (Výchozí)</string>
+    <string name="pref_theme_emerald">Tradiční smaragd</string>
+    <string name="grid_direction_vertical">Vertikální (experiment)</string>
+    <string name="grid_direction_horizontal">Horizontální</string>
+    <string name="grid_direction">Směr mřížky</string>
+    <string name="pref_device_model">Model zařízení</string>
 </resources>

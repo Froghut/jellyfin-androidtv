@@ -9,12 +9,6 @@ import org.jellyfin.androidtv.TvApp;
 import org.jellyfin.androidtv.details.ItemListActivity;
 import org.jellyfin.androidtv.playback.MediaManager;
 import org.jellyfin.androidtv.util.Utils;
-
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
-
 import org.jellyfin.apiclient.interaction.Response;
 import org.jellyfin.apiclient.model.dto.BaseItemDto;
 import org.jellyfin.apiclient.model.dto.BaseItemType;
@@ -27,16 +21,22 @@ import org.jellyfin.apiclient.model.querying.ItemSortBy;
 import org.jellyfin.apiclient.model.querying.ItemsResult;
 import org.jellyfin.apiclient.model.querying.SimilarItemsQuery;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
+
+import timber.log.Timber;
+
 public class PlaybackHelper {
     public static void getItemsToPlay(final BaseItemDto mainItem, boolean allowIntros, final boolean shuffle, final Response<List<BaseItemDto>> outerResponse) {
         final List<BaseItemDto> items = new ArrayList<>();
         ItemQuery query = new ItemQuery();
-        TvApp.getApplication().setPlayingIntros(false);
 
         switch (mainItem.getBaseItemType()) {
             case Episode:
                 items.add(mainItem);
-                if (TvApp.getApplication().getPrefs().getBoolean("pref_enable_tv_queuing", true)) {
+                if (TvApp.getApplication().getUserPreferences().getMediaQueuingEnabled()) {
                     MediaManager.setVideoQueueModified(false); // we are automatically creating new queue
                     //add subsequent episodes
                     if (mainItem.getSeasonId() != null && mainItem.getIndexNumber() != null) {
@@ -45,7 +45,15 @@ public class PlaybackHelper {
                         query.setMinIndexNumber(mainItem.getIndexNumber() + 1);
                         query.setSortBy(new String[] {ItemSortBy.SortName});
                         query.setIncludeItemTypes(new String[]{"Episode"});
-                        query.setFields(new ItemFields[] {ItemFields.MediaSources, ItemFields.MediaStreams, ItemFields.Path, ItemFields.Chapters, ItemFields.Overview, ItemFields.PrimaryImageAspectRatio});
+                        query.setFields(new ItemFields[] {
+                                ItemFields.MediaSources,
+                                ItemFields.MediaStreams,
+                                ItemFields.Path,
+                                ItemFields.Chapters,
+                                ItemFields.Overview,
+                                ItemFields.PrimaryImageAspectRatio,
+                                ItemFields.ChildCount
+                        });
                         query.setUserId(TvApp.getApplication().getCurrentUser().getId());
                         TvApp.getApplication().getApiClient().GetItemsAsync(query, new Response<ItemsResult>() {
                             @Override
@@ -66,7 +74,7 @@ public class PlaybackHelper {
                             }
                         });
                     } else {
-                        TvApp.getApplication().getLogger().Info("Unable to add subsequent episodes due to lack of season or episode data.");
+                        Timber.i("Unable to add subsequent episodes due to lack of season or episode data.");
                         outerResponse.onResponse(items);
                     }
                 } else {
@@ -85,7 +93,15 @@ public class PlaybackHelper {
                 query.setSortBy(new String[]{shuffle ? ItemSortBy.Random : ItemSortBy.SortName});
                 query.setRecursive(true);
                 query.setLimit(50); // guard against too many items
-                query.setFields(new ItemFields[] {ItemFields.MediaSources, ItemFields.MediaStreams, ItemFields.Chapters, ItemFields.Path, ItemFields.Overview, ItemFields.PrimaryImageAspectRatio});
+                query.setFields(new ItemFields[] {
+                        ItemFields.MediaSources,
+                        ItemFields.MediaStreams,
+                        ItemFields.Chapters,
+                        ItemFields.Path,
+                        ItemFields.Overview,
+                        ItemFields.PrimaryImageAspectRatio,
+                        ItemFields.ChildCount
+                });
                 query.setUserId(TvApp.getApplication().getCurrentUser().getId());
                 TvApp.getApplication().getApiClient().GetItemsAsync(query, new Response<ItemsResult>() {
                     @Override
@@ -104,7 +120,11 @@ public class PlaybackHelper {
                 query.setSortBy(shuffle ? new String[] {ItemSortBy.Random} : mainItem.getBaseItemType() == BaseItemType.MusicArtist ? new String[] {ItemSortBy.Album} : new String[] {ItemSortBy.SortName});
                 query.setRecursive(true);
                 query.setLimit(150); // guard against too many items
-                query.setFields(new ItemFields[] {ItemFields.PrimaryImageAspectRatio, ItemFields.Genres});
+                query.setFields(new ItemFields[] {
+                        ItemFields.PrimaryImageAspectRatio,
+                        ItemFields.Genres,
+                        ItemFields.ChildCount
+                });
                 query.setUserId(TvApp.getApplication().getCurrentUser().getId());
                 query.setArtistIds(new String[]{mainItem.getId()});
                 TvApp.getApplication().getApiClient().GetItemsAsync(query, new Response<ItemsResult>() {
@@ -125,7 +145,14 @@ public class PlaybackHelper {
                 if (shuffle) query.setSortBy(new String[] {ItemSortBy.Random});
                 query.setRecursive(true);
                 query.setLimit(150); // guard against too many items
-                query.setFields(new ItemFields[] {ItemFields.MediaSources, ItemFields.MediaStreams, ItemFields.Chapters, ItemFields.Path, ItemFields.PrimaryImageAspectRatio});
+                query.setFields(new ItemFields[] {
+                        ItemFields.MediaSources,
+                        ItemFields.MediaStreams,
+                        ItemFields.Chapters,
+                        ItemFields.Path,
+                        ItemFields.PrimaryImageAspectRatio,
+                        ItemFields.ChildCount
+                });
                 query.setUserId(TvApp.getApplication().getCurrentUser().getId());
                 TvApp.getApplication().getApiClient().GetItemsAsync(query, new Response<ItemsResult>() {
                     @Override
@@ -180,17 +207,14 @@ public class PlaybackHelper {
                 break;
 
             default:
-                if (allowIntros && !TvApp.getApplication().useExternalPlayer(mainItem.getBaseItemType()) && TvApp.getApplication().getPrefs().getBoolean("pref_enable_cinema_mode", true)) {
+                if (allowIntros && !TvApp.getApplication().useExternalPlayer(mainItem.getBaseItemType()) && TvApp.getApplication().getUserPreferences().getCinemaModeEnabled()) {
                     //Intros
                     TvApp.getApplication().getApiClient().GetIntrosAsync(mainItem.getId(), TvApp.getApplication().getCurrentUser().getId(), new Response<ItemsResult>() {
                         @Override
                         public void onResponse(ItemsResult response) {
                             if (response.getTotalRecordCount() > 0){
                                 Collections.addAll(items, response.getItems());
-                                TvApp.getApplication().getLogger().Info(response.getTotalRecordCount() + " intro items added for playback.");
-                                TvApp.getApplication().setPlayingIntros(true);
-                            } else {
-                                TvApp.getApplication().setPlayingIntros(false);
+                                Timber.i("%d intro items added for playback.", response.getTotalRecordCount());
                             }
                             //Finally, the main item including subsequent parts
                             addMainItem(mainItem, items, outerResponse);
@@ -198,7 +222,7 @@ public class PlaybackHelper {
 
                         @Override
                         public void onError(Exception exception) {
-                            TvApp.getApplication().getLogger().ErrorException("Error retrieving intros", exception);
+                            Timber.e(exception, "Error retrieving intros");
                             addMainItem(mainItem, items, outerResponse);
                         }
                     });
@@ -265,7 +289,7 @@ public class PlaybackHelper {
 
             @Override
             public void onError(Exception exception) {
-                TvApp.getApplication().getLogger().ErrorException("Error retrieving item for playback", exception);
+                Timber.e(exception, "Error retrieving item for playback");
                 Utils.showToast(activity, R.string.msg_video_playback_error);
             }
         });
@@ -288,7 +312,11 @@ public class PlaybackHelper {
         SimilarItemsQuery query = new SimilarItemsQuery();
         query.setId(seedId);
         query.setUserId(TvApp.getApplication().getCurrentUser().getId());
-        query.setFields(new ItemFields[] {ItemFields.PrimaryImageAspectRatio, ItemFields.Genres});
+        query.setFields(new ItemFields[] {
+                ItemFields.PrimaryImageAspectRatio,
+                ItemFields.Genres,
+                ItemFields.ChildCount
+        });
         TvApp.getApplication().getApiClient().GetInstantMixFromItem(query, new Response<ItemsResult>() {
             @Override
             public void onResponse(ItemsResult response) {
